@@ -6,9 +6,19 @@ export function useAuth() {
     retry: false,
   });
 
+  const login = () => {
+    window.location.href = "/api/login";
+  };
+
+  const logout = () => {
+    window.location.href = "/api/logout";
+  };
+
   return {
     user,
     isLoading,
     isAuthenticated: !!user,
+    login,
+    logout,
   };
 }

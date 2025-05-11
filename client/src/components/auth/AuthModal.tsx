@@ -22,7 +22,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   };
   
   return (
-    <Dialog open={isOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) handleClose();
+    }}>
       <DialogContent className="sm:max-w-md">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-primary-600 dark:text-primary-400 mb-2">Welcome to RespondX</h2>
@@ -35,6 +37,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             onClick={handleLogin}
           >
             Sign in with Replit
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="w-full"
+            onClick={handleClose}
+          >
+            Continue as Guest
           </Button>
           
           <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
