@@ -81,12 +81,14 @@ const Sidebar: React.FC = () => {
               <div>
                 <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white">
                   <span className="text-sm font-medium">
-                    {user?.name ? user.name.charAt(0) + (user.name.split(' ')[1]?.charAt(0) || '') : 'U'}
+                    {user?.firstName ? user.firstName.charAt(0) + (user.lastName?.charAt(0) || '') : 'U'}
                   </span>
                 </div>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{user?.name || 'User'}</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                  {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User' : 'User'}
+                </p>
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{user?.email || 'user@example.com'}</p>
               </div>
               <button 

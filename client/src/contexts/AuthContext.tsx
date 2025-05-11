@@ -1,74 +1,44 @@
-import React, { createContext, useState, useEffect, useContext } from "react";
-import { getCurrentUser, loginWithCredentials, loginWithGoogle, loginWithApple, logout } from "@/lib/auth";
+import React, { createContext, useContext } from "react";
+import { useAuth as useReplitAuth } from "../hooks/useAuth";
 
+// Adjusted User interface to match Replit Auth's user structure
 interface User {
-  id: number;
-  email: string;
-  name: string;
-  avatar?: string;
+  id: string;
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  profileImageUrl: string | null;
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
-  loginWithApple: () => Promise<void>;
-  logout: () => Promise<void>;
+  login: () => void;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
   isAuthenticated: false,
-  login: async () => {},
-  loginWithGoogle: async () => {},
-  loginWithApple: async () => {},
-  logout: async () => {},
+  login: () => {},
+  logout: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading, isAuthenticated } = useReplitAuth();
 
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const user = await getCurrentUser();
-        setUser(user);
-      } catch (error) {
-        setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadUser();
-  }, []);
-
-  const login = async (email: string, password: string) => {
-    try {
-      const user = await loginWithCredentials(email, password);
-      setUser(user);
-    } catch (error) {
-      throw error;
-    }
+  // Replit Auth login handler - redirects to Replit's login page
+  const login = () => {
+    window.location.href = "/api/login";
   };
 
-  const handleGoogleLogin = async () => {
-    await loginWithGoogle();
-  };
-
-  const handleAppleLogin = async () => {
-    await loginWithApple();
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    setUser(null);
+  // Replit Auth logout handler - redirects to the logout endpoint
+  const logout = () => {
+    window.location.href = "/api/logout";
   };
 
   return (
@@ -76,11 +46,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         isLoading,
-        isAuthenticated: !!user,
+        isAuthenticated,
         login,
-        loginWithGoogle: handleGoogleLogin,
-        loginWithApple: handleAppleLogin,
-        logout: handleLogout,
+        logout,
       }}
     >
       {children}
