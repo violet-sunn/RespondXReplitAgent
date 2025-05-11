@@ -873,15 +873,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
 
-  // Set up WebSocket server for real-time updates
-  const wss = new WebSocketServer({ server: httpServer });
+  // Set up WebSocket server for real-time updates with a specific path
+  // This prevents conflicts with Vite's WebSocket server for HMR
+  const wss = new WebSocketServer({ 
+    server: httpServer,
+    path: '/ws'  // Use a distinct path for our WebSocket server
+  });
 
   wss.on('connection', (ws) => {
+    console.log('WebSocket client connected to /ws path');
+    
     ws.on('message', (message) => {
       console.log('received: %s', message);
+      
+      try {
+        // Echo back the message to confirm receipt
+        const messageString = message.toString();
+        ws.send(JSON.stringify({
+          type: 'echo',
+          message: messageString
+        }));
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
     });
 
-    ws.send(JSON.stringify({ type: 'connection', message: 'WebSocket connected' }));
+    // Send welcome message on connection
+    ws.send(JSON.stringify({ 
+      type: 'connection', 
+      status: 'success',
+      message: 'WebSocket connected to RespondX server'
+    }));
+    
+    // Handle disconnection
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+    });
   });
 
   return httpServer;
