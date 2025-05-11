@@ -5,13 +5,20 @@ import { Button } from "@/components/ui/button";
 
 interface AuthModalProps {
   isOpen: boolean;
+  onClose?: () => void;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const { login } = useAuth();
   
   const handleLogin = () => {
     login(); // This will redirect to Replit Auth
+  };
+  
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    }
   };
   
   return (

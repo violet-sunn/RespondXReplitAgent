@@ -16,14 +16,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  // If not authenticated, show auth modal
+  // Show auth modal based on authentication status, but allow it to be closed
   React.useEffect(() => {
-    if (!isAuthenticated) {
+    // Only automatically show modal on initial load
+    if (!isAuthenticated && !localStorage.getItem('authModalDismissed')) {
       setShowAuthModal(true);
     } else {
       setShowAuthModal(false);
     }
   }, [isAuthenticated]);
+  
+  // Handle dismissing the auth modal
+  const handleDismissAuthModal = () => {
+    setShowAuthModal(false);
+    localStorage.setItem('authModalDismissed', 'true');
+  };
+  
+  // Handle reopening the auth modal
+  const handleOpenAuthModal = () => {
+    setShowAuthModal(true);
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -110,7 +122,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <MobileNav isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
 
       {/* Auth Modal */}
-      {showAuthModal && <AuthModal isOpen={showAuthModal} />}
+      {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={handleDismissAuthModal} />}
     </div>
   );
 };
