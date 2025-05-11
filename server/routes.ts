@@ -2,12 +2,8 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import bcrypt from "bcryptjs";
-import passport from "passport";
-import session from "express-session";
-import { Strategy as LocalStrategy } from "passport-local";
-import { WebSocketServer } from "ws";
-import PgSimpleStore from "connect-pg-simple";
+import { WebSocketServer, WebSocket } from "ws";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { pool } from "./db";
 
 import { insertUserSchema, insertAppSchema, insertAISettingsSchema, insertUserSettingsSchema } from "@shared/schema";
@@ -237,192 +233,26 @@ const validateBody = <T extends z.ZodType>(schema: T) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Configure session store
-  const pgSessionStore = new (PgSimpleStore(session))({
-    pool,
-    tableName: 'session',
-    createTableIfMissing: true,
-  });
+  // Setup Replit Authentication
+  await setupAuth(app);
 
-  // Set up session middleware
-  app.use(
-    session({
-      store: pgSessionStore,
-      secret: process.env.SESSION_SECRET || 'respondx-secret-key',
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
-      },
-    })
-  );
+  // Authentication middleware (provided by replitAuth.ts)
+  const ensureAuthenticated = isAuthenticated;
 
-  // Configure passport
-  app.use(passport.initialize());
-  app.use(passport.session());
-
-  // Set up passport local strategy
-  passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        // Find user by username
-        const user = await storage.getUserByUsername(username);
-        if (!user) {
-          return done(null, false, { message: 'Invalid username or password' });
-        }
-
-        // Compare password
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-          return done(null, false, { message: 'Invalid username or password' });
-        }
-
-        return done(null, user);
-      } catch (error) {
-        return done(error);
-      }
-    })
-  );
-
-  // Serialize/deserialize user
-  passport.serializeUser((user: any, done) => {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(async (id: number, done) => {
+  // Auth routes with Replit Auth
+  app.get('/api/auth/user', ensureAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(id);
-      done(null, user);
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      res.json(user);
     } catch (error) {
-      done(error);
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
   });
-
-  // Middleware to check if user is authenticated
-  const ensureAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-    if (req.isAuthenticated()) {
-      return next();
-    }
-    res.status(401).json({ message: 'Unauthorized' });
-  };
-
-  // Auth routes
-  app.post(
-    '/api/auth/login',
-    validateBody(
-      z.object({
-        email: z.string().email(),
-        password: z.string().min(6),
-      })
-    ),
-    async (req, res, next) => {
-      try {
-        // Find user by email
-        const user = await storage.getUserByEmail(req.body.email);
-        if (!user) {
-          return res.status(401).json({ message: 'Invalid email or password' });
-        }
-
-        // Compare password
-        const isMatch = await bcrypt.compare(req.body.password, user.password);
-        if (!isMatch) {
-          return res.status(401).json({ message: 'Invalid email or password' });
-        }
-
-        // Log in user
-        req.login(user, (err) => {
-          if (err) {
-            return next(err);
-          }
-          return res.json({
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            name: user.name,
-            avatar: user.avatar,
-          });
-        });
-      } catch (error) {
-        next(error);
-      }
-    }
-  );
-
-  app.post('/api/auth/logout', (req, res) => {
-    req.logout((err) => {
-      if (err) {
-        return res.status(500).json({ message: 'Error logging out' });
-      }
-      res.json({ message: 'Logged out successfully' });
-    });
-  });
-
-  app.get('/api/auth/me', ensureAuthenticated, (req, res) => {
-    const user = req.user as any;
-    res.json({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      name: user.name,
-      avatar: user.avatar,
-    });
-  });
-
-  // Register route
-  app.post(
-    '/api/auth/register',
-    validateBody(
-      insertUserSchema.extend({
-        passwordConfirm: z.string(),
-      }).refine((data) => data.password === data.passwordConfirm, {
-        message: 'Passwords do not match',
-        path: ['passwordConfirm'],
-      })
-    ),
-    async (req, res, next) => {
-      try {
-        const { username, email, password, name } = req.body;
-
-        // Check if username or email already exists
-        const existingUser = await storage.getUserByUsername(username);
-        if (existingUser) {
-          return res.status(400).json({ message: 'Username already exists' });
-        }
-
-        const existingEmail = await storage.getUserByEmail(email);
-        if (existingEmail) {
-          return res.status(400).json({ message: 'Email already exists' });
-        }
-
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create user
-        const user = await storage.createUser({
-          username,
-          email,
-          password: hashedPassword,
-          name,
-        });
-
-        // Log in user
-        req.login(user, (err) => {
-          if (err) {
-            return next(err);
-          }
-          return res.status(201).json({
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            name: user.name,
-          });
-        });
-      } catch (error) {
-        next(error);
-      }
-    }
-  );
 
   // Apps routes
   app.get('/api/apps', ensureAuthenticated, async (req, res) => {

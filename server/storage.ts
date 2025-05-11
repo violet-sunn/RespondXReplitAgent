@@ -20,9 +20,9 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   
   // App methods
-  createApp(app: InsertApp & { userId: number }): Promise<App>;
+  createApp(app: InsertApp & { userId: string }): Promise<App>;
   getAppById(id: number): Promise<App | undefined>;
-  getUserApps(userId: number): Promise<App[]>;
+  getUserApps(userId: string): Promise<App[]>;
   updateApp(id: number, appData: Partial<InsertApp>): Promise<App>;
   deleteApp(id: number): Promise<void>;
   
@@ -57,17 +57,13 @@ export interface IStorage {
 // Database Storage implementation
 export class DatabaseStorage implements IStorage {
   // User methods
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
-  }
-
   async getUserByEmail(email: string): Promise<User | undefined> {
+    if (!email) return undefined;
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
   }
@@ -80,7 +76,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User> {
+  async updateUser(id: string, userData: Partial<InsertUser>): Promise<User> {
     const [user] = await db
       .update(users)
       .set({ ...userData, updatedAt: new Date() })
@@ -88,9 +84,24 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return user;
   }
+  
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
 
   // App methods
-  async createApp(app: InsertApp & { userId: number }): Promise<App> {
+  async createApp(app: InsertApp & { userId: string }): Promise<App> {
     const [newApp] = await db
       .insert(apps)
       .values(app)
@@ -103,7 +114,7 @@ export class DatabaseStorage implements IStorage {
     return app;
   }
 
-  async getUserApps(userId: number): Promise<App[]> {
+  async getUserApps(userId: string): Promise<App[]> {
     return db.select().from(apps).where(eq(apps.userId, userId)).orderBy(apps.name);
   }
 
