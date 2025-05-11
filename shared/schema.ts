@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, unique, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, unique, pgEnum, varchar, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -8,22 +8,32 @@ export const appStatusEnum = pgEnum('app_status', ['active', 'warning', 'error']
 export const reviewResponseStatusEnum = pgEnum('review_response_status', ['draft', 'approved', 'published']);
 export const responseStyleEnum = pgEnum('response_style', ['friendly', 'professional', 'casual', 'formal']);
 
-// Users Table
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// Users Table - Updated for Replit Auth
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-  email: text("email").notNull().unique(),
-  name: text("name").notNull(),
-  avatar: text("avatar"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Apps Table
 export const apps = pgTable("apps", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
   name: text("name").notNull(),
   platform: platformEnum("platform").notNull(),
   bundleId: text("bundle_id"),
@@ -116,7 +126,11 @@ export const analyticsData = pgTable("analytics_data", {
 
 // Zod schemas
 export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const upsertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
   updatedAt: true,
 });
@@ -166,6 +180,7 @@ export const insertAnalyticsDataSchema = createInsertSchema(analyticsData).omit(
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpsertUser = z.infer<typeof upsertUserSchema>;
 
 export type App = typeof apps.$inferSelect;
 export type InsertApp = z.infer<typeof insertAppSchema>;

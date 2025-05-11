@@ -1,5 +1,5 @@
 import { 
-  users, type User, type InsertUser,
+  users, type User, type InsertUser, type UpsertUser,
   apps, type App, type InsertApp,
   reviews, type Review, type InsertReview,
   reviewResponses, type ReviewResponse, type InsertReviewResponse,
@@ -13,11 +13,11 @@ import { eq, and, or, desc, gte, like } from "drizzle-orm";
 // Storage interface
 export interface IStorage {
   // User methods
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
+  getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, userData: Partial<InsertUser>): Promise<User>;
+  updateUser(id: string, userData: Partial<InsertUser>): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
   
   // App methods
   createApp(app: InsertApp & { userId: number }): Promise<App>;
