@@ -879,22 +879,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     server: httpServer,
     path: '/ws'  // Use a distinct path for our WebSocket server
   });
+  
+  // Store connected clients
+  const clients = new Set();
+  
+  // Function to broadcast message to all connected clients
+  const broadcastMessage = (data) => {
+    const message = JSON.stringify(data);
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocketServer.OPEN) {
+        client.send(message);
+      }
+    });
+  };
 
   wss.on('connection', (ws) => {
     console.log('WebSocket client connected to /ws path');
+    clients.add(ws);
     
     ws.on('message', (message) => {
       console.log('received: %s', message);
       
       try {
-        // Echo back the message to confirm receipt
-        const messageString = message.toString();
-        ws.send(JSON.stringify({
-          type: 'echo',
-          message: messageString
-        }));
+        // Parse the message
+        const parsedMessage = JSON.parse(message.toString());
+        
+        // Handle different message types
+        switch (parsedMessage.type) {
+          case 'message':
+            // Echo back regular messages
+            ws.send(JSON.stringify({
+              type: 'echo',
+              message: parsedMessage.text,
+              timestamp: new Date().toISOString()
+            }));
+            break;
+            
+          case 'new_review':
+            // For demo purposes, broadcast simulated review notifications to all clients
+            broadcastMessage({
+              type: 'new_review',
+              id: parsedMessage.id || Math.floor(Math.random() * 1000),
+              appId: parsedMessage.appId || 1,
+              appName: parsedMessage.appName || "App",
+              platform: parsedMessage.platform || "app_store",
+              rating: parsedMessage.rating || 5,
+              authorName: parsedMessage.authorName || "User",
+              text: parsedMessage.text || "Great app!",
+              timestamp: new Date().toISOString()
+            });
+            break;
+            
+          default:
+            // Echo back other messages
+            ws.send(JSON.stringify({
+              type: 'echo',
+              originalMessage: parsedMessage,
+              timestamp: new Date().toISOString()
+            }));
+        }
       } catch (error) {
         console.error('Error processing WebSocket message:', error);
+        ws.send(JSON.stringify({
+          type: 'error',
+          message: 'Failed to process message',
+          error: error.message
+        }));
       }
     });
 
@@ -902,12 +952,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ws.send(JSON.stringify({ 
       type: 'connection', 
       status: 'success',
-      message: 'WebSocket connected to RespondX server'
+      message: 'WebSocket connected to RespondX server',
+      timestamp: new Date().toISOString()
     }));
     
     // Handle disconnection
     ws.on('close', () => {
       console.log('WebSocket client disconnected');
+      clients.delete(ws);
+    });
+    
+    // Handle errors
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      clients.delete(ws);
     });
   });
 

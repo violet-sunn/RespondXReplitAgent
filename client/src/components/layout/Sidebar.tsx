@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, MessageCircle, AppWindow, LineChart, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, MessageCircle, AppWindow, LineChart, Settings, LogOut, WifiIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Sidebar: React.FC = () => {
@@ -32,6 +32,11 @@ const Sidebar: React.FC = () => {
       path: "/settings", 
       label: "Settings", 
       icon: <Settings className="mr-3 flex-shrink-0 text-lg" /> 
+    },
+    { 
+      path: "/websocket-demo", 
+      label: "Realtime Demo", 
+      icon: <WifiIcon className="mr-3 flex-shrink-0 text-lg" /> 
     }
   ];
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { XIcon, LayoutDashboard, MessageCircle, AppWindow, LineChart, Settings, LogOut } from "lucide-react";
+import { XIcon, LayoutDashboard, MessageCircle, AppWindow, LineChart, Settings, LogOut, WifiIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface MobileNavProps {
@@ -37,6 +37,11 @@ const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
       path: "/settings", 
       label: "Settings", 
       icon: <Settings className="mr-4 flex-shrink-0 text-lg" /> 
+    },
+    { 
+      path: "/websocket-demo", 
+      label: "Realtime Demo", 
+      icon: <WifiIcon className="mr-4 flex-shrink-0 text-lg" /> 
     }
   ];
 
