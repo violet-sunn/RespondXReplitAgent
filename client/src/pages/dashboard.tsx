@@ -4,6 +4,7 @@ import StatCard from "@/components/dashboard/StatCard";
 import AppIntegrationList from "@/components/dashboard/AppIntegrationList";
 import AIOverview from "@/components/dashboard/AIOverview";
 import ReviewList from "@/components/reviews/ReviewList";
+import { WebSocketStatus } from "@/components/common/WebSocketStatus";
 import { useQuery } from "@tanstack/react-query";
 
 const Dashboard: React.FC = () => {
@@ -14,7 +15,10 @@ const Dashboard: React.FC = () => {
   return (
     <div className="py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Dashboard</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Dashboard</h1>
+          <WebSocketStatus />
+        </div>
       </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
         

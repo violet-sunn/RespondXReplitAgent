@@ -3,7 +3,8 @@ import Sidebar from "./Sidebar";
 import MobileNav from "./MobileNav";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/auth/AuthModal";
-import { Search, Bell } from "lucide-react";
+import { ReviewNotifications } from "@/components/common/ReviewNotifications";
+import { Search } from "lucide-react";
 import ThemeToggle from "@/components/ui/theme-toggle";
 
 interface LayoutProps {
@@ -80,12 +81,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="ml-4 flex items-center md:ml-6 space-x-4">
               <ThemeToggle />
               
-              <button 
-                type="button" 
-                className="p-1 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-              >
-                <Bell className="h-6 w-6" />
-              </button>
+              <ReviewNotifications />
               
               <div className="relative">
                 <button 

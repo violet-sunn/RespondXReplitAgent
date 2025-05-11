@@ -11,6 +11,7 @@ import Reviews from "@/pages/reviews";
 import Applications from "@/pages/applications";
 import Analytics from "@/pages/analytics";
 import Settings from "@/pages/settings";
+import WebSocketDemo from "@/pages/websocket-demo";
 import Layout from "@/components/layout/Layout";
 
 function Router() {
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/applications" component={Applications} />
       <Route path="/analytics" component={Analytics} />
       <Route path="/settings" component={Settings} />
+      <Route path="/websocket-demo" component={WebSocketDemo} />
       <Route component={NotFound} />
     </Switch>
   );
