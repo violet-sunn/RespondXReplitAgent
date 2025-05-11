@@ -2,7 +2,7 @@ import React, { createContext, useContext } from "react";
 import { useAuth as useReplitAuth } from "../hooks/useAuth";
 
 // Adjusted User interface to match Replit Auth's user structure
-interface User {
+export interface User {
   id: string;
   email: string | null;
   firstName: string | null;
@@ -29,17 +29,10 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isLoading, isAuthenticated } = useReplitAuth();
-
-  // Replit Auth login handler - redirects to Replit's login page
-  const login = () => {
-    window.location.href = "/api/login";
-  };
-
-  // Replit Auth logout handler - redirects to the logout endpoint
-  const logout = () => {
-    window.location.href = "/api/logout";
-  };
+  const { user: replitUser, isLoading, isAuthenticated, login, logout } = useReplitAuth();
+  
+  // Cast the user from the API to our User type
+  const user = replitUser as User | null;
 
   return (
     <AuthContext.Provider

@@ -1,7 +1,8 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { XIcon, LayoutDashboard, MessageCircle, AppWindow, LineChart, Settings, LogOut, WifiIcon } from "lucide-react";
+import { XIcon, LayoutDashboard, MessageCircle, AppWindow, LineChart, Settings, LogOut, WifiIcon, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 interface MobileNavProps {
   isOpen: boolean;
@@ -10,7 +11,7 @@ interface MobileNavProps {
 
 const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
   const [location] = useLocation();
-  const { user, logout } = useAuth();
+  const { user, isAuthenticated, login, logout } = useAuth();
 
   const navItems = [
     { 
@@ -98,28 +99,41 @@ const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
         </div>
         
         <div className="flex-shrink-0 flex border-t border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center">
-            <div>
-              <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white">
-                <span className="text-sm font-medium">
-                  {user?.firstName ? user.firstName.charAt(0) + (user.lastName?.charAt(0) || '') : 'U'}
-                </span>
+          {isAuthenticated ? (
+            <div className="flex items-center w-full">
+              <div>
+                <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white">
+                  <span className="text-sm font-medium">
+                    {user?.firstName ? user.firstName.charAt(0) + (user.lastName?.charAt(0) || '') : 'U'}
+                  </span>
+                </div>
               </div>
+              <div className="ml-3">
+                <p className="text-base font-medium text-gray-700 dark:text-gray-200">
+                  {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User' : 'User'}
+                </p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{user?.email || 'user@example.com'}</p>
+              </div>
+              <button 
+                type="button" 
+                className="ml-auto flex-shrink-0 bg-white dark:bg-gray-700 p-1 rounded-full text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                onClick={() => logout()}
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
             </div>
-            <div className="ml-3">
-              <p className="text-base font-medium text-gray-700 dark:text-gray-200">
-                {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User' : 'User'}
-              </p>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{user?.email || 'user@example.com'}</p>
-            </div>
-            <button 
-              type="button" 
-              className="ml-auto flex-shrink-0 bg-white dark:bg-gray-700 p-1 rounded-full text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
-              onClick={() => logout()}
+          ) : (
+            <Button 
+              className="w-full flex items-center justify-center"
+              onClick={() => {
+                login();
+                onClose();
+              }}
             >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
+              <LogIn className="mr-2 h-4 w-4" />
+              Sign In
+            </Button>
+          )}
         </div>
       </div>
       
