@@ -49,12 +49,10 @@ export default function SandboxPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   // Connection test states
-  const [apiKey, setApiKey] = useState('');
   const [testResult, setTestResult] = useState<GigaChatTestResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
   // Manual review response generation states
-  const [apiKeyManual, setApiKeyManual] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [reviewRating, setReviewRating] = useState(3);
   const [responseStyle, setResponseStyle] = useState('professional');
