@@ -7,7 +7,7 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { pool } from "./db";
 
 import { insertUserSchema, insertAppSchema, insertAISettingsSchema, insertUserSettingsSchema } from "@shared/schema";
-import { generateAIResponse } from "./services/gigachat";
+import { generateAIResponse } from "./services/openai";
 import { fetchAppStoreReviews } from "./services/appstore";
 import { fetchGooglePlayReviews } from "./services/playstore";
 import sandboxRouter from "./routes/sandbox";
@@ -834,8 +834,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Direct API emulation for GigaChat
-  app.all('/api/gigachat/*', async (req, res) => {
+  // Direct API emulation for OpenAI
+  app.all('/api/openai/*', async (req, res) => {
     try {
       // Get environment ID from header or use demo environment (1) as default
       let environmentId = parseInt(req.headers['x-sandbox-environment'] as string);
@@ -856,7 +856,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Sandbox environment is not active' });
       }
       
-      const path = req.path.replace('/api/gigachat', '');
+      const path = req.path.replace('/api/openai', '');
       const scenario = req.query.scenario as string || undefined;
       
       // Import the sandbox service
@@ -865,7 +865,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Pass request body to the sandbox service
       const response = await sandboxService.getResponseForEndpoint(
         environmentId,
-        'gigachat',
+        'openai',
         path,
         req.method,
         scenario as any,
