@@ -95,6 +95,52 @@ class SandboxService {
       }
     }
     
+    // For GigaChat API, provide default endpoints for common paths
+    if (apiType === 'gigachat') {
+      // Create dummy endpoint objects for the most common GigaChat API endpoints
+      const commonGigachatEndpoints = {
+        '/v1/oauth/token': {
+          id: 10001,
+          environmentId,
+          apiType: 'gigachat',
+          path: '/v1/oauth/token',
+          method: 'POST',
+          description: 'Получение OAuth токена для GigaChat API'
+        },
+        '/v1/chat/completions': {
+          id: 10002,
+          environmentId,
+          apiType: 'gigachat',
+          path: '/v1/chat/completions',
+          method: 'POST',
+          description: 'Генерирование ответа модели GigaChat'
+        },
+        '/v1/models': {
+          id: 10003,
+          environmentId,
+          apiType: 'gigachat',
+          path: '/v1/models',
+          method: 'GET',
+          description: 'Получение списка доступных моделей GigaChat'
+        },
+        '/v1/auth/token': {
+          id: 10004,
+          environmentId,
+          apiType: 'gigachat',
+          path: '/v1/auth/token',
+          method: 'POST', 
+          description: 'Альтернативный эндпоинт для получения токена GigaChat'
+        }
+      };
+      
+      // Check if the path matches any of our default endpoints
+      const pathWithoutParams = path.split('?')[0];
+      if (pathWithoutParams in commonGigachatEndpoints && 
+          (method === 'POST' || method === 'GET')) {
+        return commonGigachatEndpoints[pathWithoutParams];
+      }
+    }
+    
     return null;
   }
 

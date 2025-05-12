@@ -128,28 +128,53 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  // Проверка, включен ли режим разработки или тестирования (development/sandbox)
+  if (process.env.NODE_ENV === 'development' || process.env.SANDBOX_MODE === 'true') {
+    // В режиме разработки пропускаем аутентификацию и имитируем гостевой доступ
+    if (!req.user) {
+      req.user = {
+        claims: {
+          sub: '999999', // Идентификатор гостевого пользователя
+          email: 'guest@respondx.dev'
+        }
+      };
+    }
+    return next();
+  }
+  
+  // Стандартная проверка аутентификации для производственного режима
   const user = req.user as any;
-
-  if (!req.isAuthenticated() || !user.expires_at) {
+  
+  // Проверяем функцию isAuthenticated, если она существует
+  const isAuthenticatedMethod = typeof req.isAuthenticated === 'function';
+  
+  if ((!isAuthenticatedMethod || !req.isAuthenticated()) && !user?.claims?.sub) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const now = Math.floor(Date.now() / 1000);
-  if (now <= user.expires_at) {
-    return next();
-  }
+  // Если есть время истечения токена, проверяем его
+  if (user && user.expires_at) {
+    const now = Math.floor(Date.now() / 1000);
+    if (now <= user.expires_at) {
+      return next();
+    }
 
-  const refreshToken = user.refresh_token;
-  if (!refreshToken) {
-    return res.redirect("/api/login");
-  }
+    const refreshToken = user.refresh_token;
+    if (!refreshToken) {
+      return res.redirect("/api/login");
+    }
 
-  try {
-    const config = await getOidcConfig();
-    const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
-    updateUserSession(user, tokenResponse);
+    try {
+      const config = await getOidcConfig();
+      const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
+      updateUserSession(user, tokenResponse);
+      return next();
+    } catch (error) {
+      return res.redirect("/api/login");
+    }
+  } else {
+    // Если нет данных о времени истечения, но есть идентификатор пользователя,
+    // пропускаем пользователя (для гостевого режима)
     return next();
-  } catch (error) {
-    return res.redirect("/api/login");
   }
 };
