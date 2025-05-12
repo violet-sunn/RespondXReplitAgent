@@ -190,8 +190,8 @@ class SandboxService {
       // Extract path parameters
       const pathParams = this.extractPathParams(path, endpoint.path);
       
-      // Специальная обработка для GigaChat API - не требуем данных из базы данных
-      if (apiType === 'gigachat') {
+      // Специальная обработка для OpenAI API - не требуем данных из базы данных
+      if (apiType === 'openai') {
         // Генерируем ответ напрямую, без обращения к сценариям из БД
         let responseData = {};
         let statusCode = 200;
