@@ -248,15 +248,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   };
 
-  // Auth routes with Replit Auth
+  // Auth routes with mock guest user
   app.get('/api/auth/user', ensureAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-      res.json(user);
+      // Return hardcoded guest user without database query
+      const guestUser = {
+        id: "999999",
+        email: "guest@respondx.dev",
+        firstName: "Guest",
+        lastName: "User",
+        profileImageUrl: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      res.json(guestUser);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
