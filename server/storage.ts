@@ -451,7 +451,8 @@ export class DatabaseStorage implements IStorage {
         apiKey: 'demo-key-1234',
         userId: '999999',
         isActive: true,
-        createdAt: new Date()
+        createdAt: new Date(),
+        updatedAt: new Date()
       }];
     }
     
@@ -474,7 +475,8 @@ export class DatabaseStorage implements IStorage {
         apiKey: 'demo-key-1234',
         userId: '999999',
         isActive: true,
-        createdAt: new Date()
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
     }
     
@@ -507,7 +509,58 @@ export class DatabaseStorage implements IStorage {
 
   // Sandbox API Endpoint methods
   async getSandboxApiEndpoints(environmentId: number): Promise<SandboxApiEndpoint[]> {
-    return db.select().from(sandboxApiEndpoints).where(eq(sandboxApiEndpoints.environmentId, environmentId));
+    // For demo environment ID 1, return hardcoded endpoints
+    if (environmentId === 1) {
+      return [
+        {
+          id: 1,
+          environmentId: 1,
+          apiType: 'app_store_connect',
+          path: '/v1/apps/{app_id}/reviews',
+          method: 'GET',
+          description: 'Fetch App Store reviews for a specific app',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: 2,
+          environmentId: 1,
+          apiType: 'app_store_connect',
+          path: '/v1/apps/{app_id}/reviews/{review_id}/response',
+          method: 'POST',
+          description: 'Respond to an App Store review',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: 3,
+          environmentId: 1,
+          apiType: 'google_play_developer',
+          path: '/v3/applications/{package_name}/reviews',
+          method: 'GET',
+          description: 'Fetch Google Play reviews for a specific app',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: 4,
+          environmentId: 1, 
+          apiType: 'gigachat',
+          path: '/v1/chat/completions',
+          method: 'POST',
+          description: 'Generate an AI response for a review',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ];
+    }
+    
+    try {
+      return db.select().from(sandboxApiEndpoints).where(eq(sandboxApiEndpoints.environmentId, environmentId));
+    } catch (e) {
+      console.error('Error in getSandboxApiEndpoints:', e);
+      return [];
+    }
   }
 
   async getSandboxApiEndpoint(
@@ -516,18 +569,34 @@ export class DatabaseStorage implements IStorage {
     path: string,
     method: string
   ): Promise<SandboxApiEndpoint | undefined> {
-    const [endpoint] = await db
-      .select()
-      .from(sandboxApiEndpoints)
-      .where(
-        and(
-          eq(sandboxApiEndpoints.environmentId, environmentId),
-          eq(sandboxApiEndpoints.apiType, apiType as any),
-          eq(sandboxApiEndpoints.path, path),
-          eq(sandboxApiEndpoints.method, method)
-        )
+    // For demo environment
+    if (environmentId === 1) {
+      // Find the matching endpoint from our hardcoded list
+      const demoEndpoints = await this.getSandboxApiEndpoints(1);
+      return demoEndpoints.find(endpoint => 
+        endpoint.apiType === apiType && 
+        endpoint.path === path && 
+        endpoint.method === method
       );
-    return endpoint;
+    }
+    
+    try {
+      const [endpoint] = await db
+        .select()
+        .from(sandboxApiEndpoints)
+        .where(
+          and(
+            eq(sandboxApiEndpoints.environmentId, environmentId),
+            eq(sandboxApiEndpoints.apiType, apiType as any),
+            eq(sandboxApiEndpoints.path, path),
+            eq(sandboxApiEndpoints.method, method)
+          )
+        );
+      return endpoint;
+    } catch (e) {
+      console.error('Error in getSandboxApiEndpoint:', e);
+      return undefined;
+    }
   }
 
   async createSandboxApiEndpoint(endpoint: InsertSandboxApiEndpoint): Promise<SandboxApiEndpoint> {
@@ -550,33 +619,214 @@ export class DatabaseStorage implements IStorage {
 
   // Sandbox Test Scenario methods
   async getSandboxTestScenarios(endpointId: number): Promise<SandboxTestScenario[]> {
-    return db.select().from(sandboxTestScenarios).where(eq(sandboxTestScenarios.endpointId, endpointId));
+    // For demo environment endpoints (1-4), return hardcoded test scenarios
+    if (endpointId >= 1 && endpointId <= 4) {
+      // Demo test scenarios with different response types
+      return [
+        {
+          id: endpointId * 10 + 1,
+          endpointId: endpointId,
+          name: 'Success Scenario',
+          type: 'success',
+          description: 'Standard successful response',
+          requestConditions: {},
+          responseData: this.getDemoResponseData(endpointId, 'success'),
+          statusCode: 200,
+          delayMs: 100,
+          isDefault: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: endpointId * 10 + 2,
+          endpointId: endpointId,
+          name: 'Error Scenario',
+          type: 'error',
+          description: 'Standard error response',
+          requestConditions: {},
+          responseData: { error: "Resource not found or invalid request", code: "NOT_FOUND" },
+          statusCode: 404,
+          delayMs: 100,
+          isDefault: false,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: endpointId * 10 + 3,
+          endpointId: endpointId,
+          name: 'Rate Limit Scenario',
+          type: 'rate_limit',
+          description: 'Rate limit exceeded response',
+          requestConditions: {},
+          responseData: { error: "Rate limit exceeded", code: "RATE_LIMIT" },
+          statusCode: 429,
+          delayMs: 100,
+          isDefault: false,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ];
+    }
+    
+    try {
+      return db.select().from(sandboxTestScenarios).where(eq(sandboxTestScenarios.endpointId, endpointId));
+    } catch (e) {
+      console.error('Error in getSandboxTestScenarios:', e);
+      return [];
+    }
+  }
+  
+  // Helper method to generate appropriate demo response data based on endpoint ID
+  private getDemoResponseData(endpointId: number, type: string): any {
+    switch (endpointId) {
+      case 1: // App Store reviews endpoint
+        return {
+          data: [
+            {
+              id: "12345",
+              attributes: {
+                title: "Great app!",
+                review: "This app is really useful and well designed.",
+                rating: 5,
+                createdDate: new Date().toISOString(),
+                userName: "HappyUser123",
+                territory: "US"
+              }
+            },
+            {
+              id: "12346",
+              attributes: {
+                title: "Needs improvement",
+                review: "Good concept but there are some bugs to fix.",
+                rating: 3,
+                createdDate: new Date().toISOString(),
+                userName: "AppReviewer42",
+                territory: "CA"
+              }
+            }
+          ],
+          links: {
+            self: "https://api.appstoreconnect.apple.com/v1/apps/app_id/reviews"
+          }
+        };
+      
+      case 2: // App Store review response endpoint
+        return {
+          data: {
+            id: "response_12345",
+            attributes: {
+              responseBody: "Thank you for your feedback! We're glad you're enjoying the app.",
+              lastModified: new Date().toISOString(),
+              state: "PUBLISHED"
+            }
+          }
+        };
+        
+      case 3: // Google Play reviews endpoint
+        return {
+          reviews: [
+            {
+              reviewId: "gp12345",
+              authorName: "Google User",
+              comments: [
+                {
+                  userComment: {
+                    text: "Love this app, very intuitive!",
+                    lastModified: {
+                      seconds: Math.floor(Date.now() / 1000)
+                    },
+                    starRating: 5
+                  }
+                }
+              ]
+            },
+            {
+              reviewId: "gp12346",
+              authorName: "Android Fan",
+              comments: [
+                {
+                  userComment: {
+                    text: "The app crashes sometimes when I try to save settings.",
+                    lastModified: {
+                      seconds: Math.floor(Date.now() / 1000)
+                    },
+                    starRating: 2
+                  }
+                }
+              ]
+            }
+          ]
+        };
+        
+      case 4: // GigaChat completions endpoint
+        return {
+          id: "chatcmpl-123456789",
+          object: "chat.completion",
+          created: Math.floor(Date.now() / 1000),
+          model: "giga-5",
+          choices: [
+            {
+              index: 0,
+              message: {
+                role: "assistant",
+                content: "Thank you for your feedback! We appreciate your kind words about our app. We're constantly working to improve the user experience and add new features. If you have any specific suggestions or encounter any issues, please don't hesitate to reach out to our support team."
+              },
+              finish_reason: "stop"
+            }
+          ]
+        };
+        
+      default:
+        return { message: "Demo response data" };
+    }
   }
 
   async getSandboxTestScenario(endpointId: number, type: string): Promise<SandboxTestScenario | undefined> {
-    const [scenario] = await db
-      .select()
-      .from(sandboxTestScenarios)
-      .where(
-        and(
-          eq(sandboxTestScenarios.endpointId, endpointId),
-          eq(sandboxTestScenarios.type, type as any)
-        )
-      );
-    return scenario;
+    // For demo environment endpoints (1-4)
+    if (endpointId >= 1 && endpointId <= 4) {
+      const scenarios = await this.getSandboxTestScenarios(endpointId);
+      return scenarios.find(scenario => scenario.type === type);
+    }
+    
+    try {
+      const [scenario] = await db
+        .select()
+        .from(sandboxTestScenarios)
+        .where(
+          and(
+            eq(sandboxTestScenarios.endpointId, endpointId),
+            eq(sandboxTestScenarios.type, type as any)
+          )
+        );
+      return scenario;
+    } catch (e) {
+      console.error('Error in getSandboxTestScenario:', e);
+      return undefined;
+    }
   }
 
   async getDefaultSandboxTestScenario(endpointId: number): Promise<SandboxTestScenario | undefined> {
-    const [scenario] = await db
-      .select()
-      .from(sandboxTestScenarios)
-      .where(
-        and(
-          eq(sandboxTestScenarios.endpointId, endpointId),
-          eq(sandboxTestScenarios.isDefault, true)
-        )
-      );
-    return scenario;
+    // For demo environment endpoints (1-4)
+    if (endpointId >= 1 && endpointId <= 4) {
+      const scenarios = await this.getSandboxTestScenarios(endpointId);
+      return scenarios.find(scenario => scenario.isDefault);
+    }
+    
+    try {
+      const [scenario] = await db
+        .select()
+        .from(sandboxTestScenarios)
+        .where(
+          and(
+            eq(sandboxTestScenarios.endpointId, endpointId),
+            eq(sandboxTestScenarios.isDefault, true)
+          )
+        );
+      return scenario;
+    } catch (e) {
+      console.error('Error in getDefaultSandboxTestScenario:', e);
+      return undefined;
+    }
   }
 
   async createSandboxTestScenario(scenario: InsertSandboxTestScenario): Promise<SandboxTestScenario> {
@@ -631,16 +881,59 @@ export class DatabaseStorage implements IStorage {
 
   // Sandbox Log methods
   async getSandboxLogs(environmentId: number, options?: { limit?: number, offset?: number }): Promise<SandboxLog[]> {
-    const limit = options?.limit || 100;
-    const offset = options?.offset || 0;
+    // For demo environment ID 1, return mock logs
+    if (environmentId === 1) {
+      // Generate demo logs for sandbox testing
+      const demoLogs: SandboxLog[] = [];
+      const now = new Date();
+      
+      // Create a few sample logs for different endpoints
+      const endpoints = await this.getSandboxApiEndpoints(1);
+      
+      for (let i = 0; i < 10; i++) {
+        const endpoint = endpoints[i % endpoints.length];
+        const logDate = new Date(now.getTime() - i * 3600000); // 1 hour apart
+        
+        demoLogs.push({
+          id: i + 1,
+          environmentId: 1,
+          endpointId: endpoint.id,
+          scenarioId: i % 3 === 0 ? endpoint.id * 10 + 1 : null,
+          requestMethod: endpoint.method,
+          requestPath: endpoint.path.replace('{app_id}', '123456').replace('{package_name}', 'com.example.app'),
+          requestHeaders: { 'Content-Type': 'application/json', 'Authorization': 'Bearer demo-token' },
+          requestBody: i % 2 === 0 ? { query: 'sample query data' } : null,
+          responseStatus: i % 5 === 0 ? 429 : 200,
+          responseBody: this.getDemoResponseData(endpoint.id, i % 5 === 0 ? 'rate_limit' : 'success'),
+          duration: 50 + Math.floor(Math.random() * 200),
+          timestamp: logDate
+        });
+      }
+      
+      // Sort by timestamp descending
+      demoLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      
+      // Apply pagination
+      const limit = options?.limit || 100;
+      const offset = options?.offset || 0;
+      return demoLogs.slice(offset, Math.min(offset + limit, demoLogs.length));
+    }
     
-    return db
-      .select()
-      .from(sandboxLogs)
-      .where(eq(sandboxLogs.environmentId, environmentId))
-      .orderBy(desc(sandboxLogs.timestamp))
-      .limit(limit)
-      .offset(offset);
+    try {
+      const limit = options?.limit || 100;
+      const offset = options?.offset || 0;
+      
+      return db
+        .select()
+        .from(sandboxLogs)
+        .where(eq(sandboxLogs.environmentId, environmentId))
+        .orderBy(desc(sandboxLogs.timestamp))
+        .limit(limit)
+        .offset(offset);
+    } catch (e) {
+      console.error('Error in getSandboxLogs:', e);
+      return [];
+    }
   }
 
   async createSandboxLog(log: InsertSandboxLog): Promise<SandboxLog> {

@@ -209,6 +209,7 @@ export const sandboxEnvironments = pgTable("sandbox_environments", {
   userId: varchar("user_id").references(() => users.id).notNull(),
   name: text("name").notNull(),
   description: text("description"),
+  apiKey: text("api_key"),
   isActive: boolean("is_active").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
