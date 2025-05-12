@@ -206,6 +206,144 @@ class SandboxService {
       // Extract path parameters
       const pathParams = this.extractPathParams(path, endpoint.path);
       
+      // Специальная обработка для GigaChat API - не требуем данных из базы данных
+      if (apiType === 'gigachat') {
+        // Генерируем ответ напрямую, без обращения к сценариям из БД
+        let responseData = {};
+        let statusCode = 200;
+        
+        // OAuth token эндпоинт
+        if (path.includes('/oauth/token') || path.includes('/auth/token')) {
+          if (requestBody && (requestBody.scope === 'GIGACHAT_API_PERS' || requestBody.scope === 'GIGACHAT_API_CORP')) {
+            responseData = {
+              access_token: `sandbox_gigachat_token_${Date.now()}`,
+              token_type: "Bearer",
+              expires_in: 3600,
+              scope: requestBody.scope || "GIGACHAT_API_PERS"
+            };
+          } else {
+            statusCode = 400;
+            responseData = {
+              error: 'invalid_scope',
+              error_description: 'Requested scope is invalid. Please use GIGACHAT_API_PERS or GIGACHAT_API_CORP'
+            };
+          }
+        } 
+        // Чат комплишн эндпоинт
+        else if (path.includes('/chat/completions')) {
+          const prompt = requestBody?.messages?.find((m: any) => m.role === 'user')?.content || '';
+          const systemPrompt = requestBody?.messages?.find((m: any) => m.role === 'system')?.content || '';
+          
+          responseData = {
+            id: `cmpl-${Date.now().toString(36)}`,
+            object: 'chat.completion',
+            created: Math.floor(Date.now() / 1000),
+            model: requestBody?.model || 'GigaChat',
+            choices: [
+              {
+                index: 0,
+                message: {
+                  role: 'assistant',
+                  content: this.generateAIResponse(prompt, systemPrompt)
+                },
+                finish_reason: 'stop'
+              }
+            ],
+            usage: {
+              prompt_tokens: prompt.length + systemPrompt.length,
+              completion_tokens: 100,
+              total_tokens: prompt.length + systemPrompt.length + 100
+            }
+          };
+        }
+        // Эндпоинт моделей
+        else if (path.includes('/models')) {
+          responseData = {
+            object: "list",
+            data: [
+              {
+                id: "GigaChat",
+                object: "model",
+                created: Math.floor(Date.now() / 1000) - 3600 * 24 * 30,
+                owned_by: "Sber",
+                capabilities: {
+                  embeddings: false,
+                  chat_completion: true
+                }
+              },
+              {
+                id: "GigaChat-Pro",
+                object: "model",
+                created: Math.floor(Date.now() / 1000) - 3600 * 24 * 15,
+                owned_by: "Sber",
+                capabilities: {
+                  embeddings: false,
+                  chat_completion: true
+                }
+              },
+              {
+                id: "GigaChat-Plus",
+                object: "model", 
+                created: Math.floor(Date.now() / 1000) - 3600 * 24 * 7,
+                owned_by: "Sber",
+                capabilities: {
+                  embeddings: true,
+                  chat_completion: true
+                }
+              }
+            ]
+          };
+        }
+        // Эндпоинт эмбеддингов
+        else if (path.includes('/embeddings')) {
+          const input = requestBody?.input || '';
+          const inputText = Array.isArray(input) ? input[0] : input;
+          const dimensions = requestBody?.dimensions || 1024;
+          
+          // Generate random embeddings
+          const embeddings = Array(dimensions).fill(0)
+            .map((_, i) => (Math.sin(i * (inputText.length || 1)) + 1) / 2);
+            
+          // Normalize
+          const sum = Math.sqrt(embeddings.reduce((acc, val) => acc + val * val, 0));
+          const normalized = embeddings.map(val => val / sum);
+          
+          responseData = {
+            object: "list",
+            data: [
+              {
+                object: "embedding",
+                embedding: normalized,
+                index: 0
+              }
+            ],
+            model: requestBody?.model || "GigaChat-Plus",
+            usage: {
+              prompt_tokens: inputText.length,
+              total_tokens: inputText.length
+            }
+          };
+        }
+        
+        // Log this request in the sandbox logs if possible
+        try {
+          await this.logRequest(environmentId, endpoint.id, 0, method, path, requestBody, statusCode, responseData);
+        } catch (error) {
+          console.warn('Could not log sandbox request:', error);
+        }
+        
+        return {
+          statusCode,
+          data: responseData,
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Sandbox-Response': 'true'
+          },
+          delay: 0
+        };
+      }
+      
+      // Для других API типов используем стандартный подход со сценариями
       // Find appropriate test scenario
       let scenario = null;
       
