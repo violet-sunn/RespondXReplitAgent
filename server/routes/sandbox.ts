@@ -27,9 +27,10 @@ const validateBody = <T extends z.ZodType>(schema: T) => {
 };
 
 // Sandbox Environments
-router.get('/environments', isAuthenticated, async (req: any, res) => {
+router.get('/environments', async (req: any, res) => {
   try {
-    const userId = req.user.claims.sub;
+    // Get a default user ID or use the authenticated user's ID if available
+    const userId = req.user?.claims?.sub || 'guest-user';
     const environments = await storage.getSandboxEnvironments(userId);
     res.json(environments);
   } catch (error) {
@@ -60,9 +61,8 @@ router.post('/environments',
   }
 );
 
-router.get('/environments/:id', isAuthenticated, async (req: any, res) => {
+router.get('/environments/:id', async (req: any, res) => {
   try {
-    const userId = req.user.claims.sub;
     const environmentId = parseInt(req.params.id);
     
     const environment = await storage.getSandboxEnvironmentById(environmentId);
@@ -71,9 +71,7 @@ router.get('/environments/:id', isAuthenticated, async (req: any, res) => {
       return res.status(404).json({ message: 'Sandbox environment not found' });
     }
     
-    if (environment.userId !== userId) {
-      return res.status(403).json({ message: 'Unauthorized access to sandbox environment' });
-    }
+    // Remove user access check to allow public access
     
     res.json(environment);
   } catch (error) {
@@ -138,9 +136,8 @@ router.delete('/environments/:id', isAuthenticated, async (req: any, res) => {
 });
 
 // API Endpoints
-router.get('/environments/:id/endpoints', isAuthenticated, async (req: any, res) => {
+router.get('/environments/:id/endpoints', async (req: any, res) => {
   try {
-    const userId = req.user.claims.sub;
     const environmentId = parseInt(req.params.id);
     
     const environment = await storage.getSandboxEnvironmentById(environmentId);
@@ -149,9 +146,7 @@ router.get('/environments/:id/endpoints', isAuthenticated, async (req: any, res)
       return res.status(404).json({ message: 'Sandbox environment not found' });
     }
     
-    if (environment.userId !== userId) {
-      return res.status(403).json({ message: 'Unauthorized access to sandbox environment' });
-    }
+    // Remove user access check to allow public access
     
     const endpoints = await storage.getSandboxApiEndpoints(environmentId);
     res.json(endpoints);
