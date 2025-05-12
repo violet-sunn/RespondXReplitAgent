@@ -214,15 +214,17 @@ export async function testGigaChatAPIConnection(apiKey: string): Promise<GigaCha
  * 
  * @param review - The review to respond to
  * @param aiSettings - Optional AI settings for customizing the response
+ * @param externalApiKey - Optional external API key to use instead of the stored one
  * @returns Promise<string> - The generated response text
  */
 export async function generateAIResponse(
   review: Review,
-  aiSettings?: AISettings | null
+  aiSettings?: AISettings | null,
+  externalApiKey?: string
 ): Promise<string> {
   try {
-    // Get API key from settings or environment
-    const apiKey = aiSettings?.apiKey || process.env.GIGACHAT_API_KEY;
+    // Get API key from parameters, settings, or environment
+    const apiKey = externalApiKey || aiSettings?.apiKey || process.env.GIGACHAT_API_KEY;
     
     if (!apiKey) {
       throw new Error('GigaChat API key not provided');
