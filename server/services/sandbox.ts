@@ -198,7 +198,7 @@ class SandboxService {
         
         // OAuth token эндпоинт
         if (path.includes('/oauth/token') || path.includes('/auth/token')) {
-          if (requestBody && (requestBody.scope === 'GIGACHAT_API_PERS' || requestBody.scope === 'GIGACHAT_API_CORP')) {
+          if (requestBody && requestBody.api_key) {
             responseData = {
               access_token: `sandbox_gigachat_token_${Date.now()}`,
               token_type: "Bearer",
@@ -246,30 +246,30 @@ class SandboxService {
             object: "list",
             data: [
               {
-                id: "GigaChat",
+                id: "gpt-3.5-turbo",
                 object: "model",
                 created: Math.floor(Date.now() / 1000) - 3600 * 24 * 30,
-                owned_by: "Sber",
+                owned_by: "openai",
                 capabilities: {
                   embeddings: false,
                   chat_completion: true
                 }
               },
               {
-                id: "GigaChat-Pro",
+                id: "gpt-3.5-turbo-16k",
                 object: "model",
                 created: Math.floor(Date.now() / 1000) - 3600 * 24 * 15,
-                owned_by: "Sber",
+                owned_by: "openai",
                 capabilities: {
                   embeddings: false,
                   chat_completion: true
                 }
               },
               {
-                id: "GigaChat-Plus",
+                id: "text-embedding-ada-002",
                 object: "model", 
                 created: Math.floor(Date.now() / 1000) - 3600 * 24 * 7,
-                owned_by: "Sber",
+                owned_by: "openai",
                 capabilities: {
                   embeddings: true,
                   chat_completion: true
@@ -998,11 +998,11 @@ class SandboxService {
       if (isFormalStyle) {
         return "Здравствуйте! Благодарим вас за обращение. Чем я могу вам помочь сегодня?";
       } else {
-        return "Привет! Я ИИ-ассистент GigaChat от Сбера. Чем могу помочь?";
+        return "Привет! Я ИИ-ассистент на базе GPT от OpenAI. Чем могу помочь?";
       } 
     }
     else if (prompt.toLowerCase().includes('что ты') || prompt.toLowerCase().includes('кто ты') || prompt.toLowerCase().includes('какие твои')) {
-      return "Я GigaChat, разработанный компанией SberAI. Я создан для того, чтобы помогать людям и отвечать на их вопросы. Могу ассистировать в решении различных задач, предоставлять информацию и поддерживать беседу на разнообразные темы.";
+      return "Я ассистент на базе модели GPT-3.5-Turbo от OpenAI. Я создан для того, чтобы помогать людям и отвечать на их вопросы. Могу ассистировать в решении различных задач, предоставлять информацию и поддерживать беседу на разнообразные темы.";
     }
     else {
       // Default response for other queries
