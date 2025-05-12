@@ -37,10 +37,12 @@ function App() {
       <TooltipProvider>
         <AuthProvider>
           <WebSocketProvider>
-            <Layout>
-              <Router />
-            </Layout>
-            <Toaster />
+            <SandboxProvider>
+              <Layout>
+                <Router />
+              </Layout>
+              <Toaster />
+            </SandboxProvider>
           </WebSocketProvider>
         </AuthProvider>
       </TooltipProvider>

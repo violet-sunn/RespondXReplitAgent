@@ -38,7 +38,7 @@ export const SandboxProvider = ({ children }: SandboxProviderProps) => {
   const queryClient = useQueryClient();
 
   // Fetch sandbox environments
-  const { data: environments = [], isLoading } = useQuery({
+  const { data: environments = [], isLoading } = useQuery<SandboxEnvironment[]>({
     queryKey: ['/api/sandbox/environments'],
     enabled: isEnabled,
   });
@@ -46,16 +46,13 @@ export const SandboxProvider = ({ children }: SandboxProviderProps) => {
   // Current environment
   const currentEnvironment = useMemo(() => {
     if (!currentEnvironmentId || !environments.length) return null;
-    return environments.find(env => env.id === currentEnvironmentId) || null;
+    return environments.find((env: SandboxEnvironment) => env.id === currentEnvironmentId) || null;
   }, [environments, currentEnvironmentId]);
 
   // Create a new sandbox environment
   const { mutateAsync: createEnvironmentMutation } = useMutation({
     mutationFn: async (data: { name: string; description?: string }) => {
-      return apiRequest('/api/sandbox/environments', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      return apiRequest('/api/sandbox/environments', 'POST', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/sandbox/environments'] });
@@ -76,10 +73,7 @@ export const SandboxProvider = ({ children }: SandboxProviderProps) => {
   // Update a sandbox environment
   const { mutateAsync: updateEnvironmentMutation } = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: { name?: string; description?: string; isActive?: boolean } }) => {
-      return apiRequest(`/api/sandbox/environments/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-      });
+      return apiRequest(`/api/sandbox/environments/${id}`, 'PATCH', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/sandbox/environments'] });
@@ -100,9 +94,7 @@ export const SandboxProvider = ({ children }: SandboxProviderProps) => {
   // Delete a sandbox environment
   const { mutateAsync: deleteEnvironmentMutation } = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/sandbox/environments/${id}`, {
-        method: 'DELETE',
-      });
+      return apiRequest(`/api/sandbox/environments/${id}`, 'DELETE');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/sandbox/environments'] });

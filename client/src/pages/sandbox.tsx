@@ -24,7 +24,8 @@ import {
   Hourglass,
   Waves,
   X,
-  Database
+  Database,
+  CheckCircle
 } from 'lucide-react';
 
 export default function SandboxPage() {
