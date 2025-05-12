@@ -406,7 +406,7 @@ const Settings: React.FC = () => {
                                 <FormControl>
                                   <Input 
                                     type="password" 
-                                    placeholder={field.value ? "••••••••••••••••" : "Enter your GigaChat API key"} 
+                                    placeholder={field.value ? "••••••••••••••••" : "Enter your OpenAI API key"} 
                                     {...field} 
                                   />
                                 </FormControl>

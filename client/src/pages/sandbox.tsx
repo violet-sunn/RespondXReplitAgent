@@ -49,7 +49,7 @@ export default function SandboxPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   // Connection test states
-  const [testResult, setTestResult] = useState<GigaChatTestResult | null>(null);
+  const [testResult, setTestResult] = useState<OpenAITestResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
   // Manual review response generation states
@@ -61,8 +61,8 @@ export default function SandboxPage() {
   const [generatedResponse, setGeneratedResponse] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   
-  // Interface for GigaChat API test results
-  interface GigaChatTestResult {
+  // Interface for OpenAI API test results
+  interface OpenAITestResult {
     success: boolean;
     message: string;
     details?: {
