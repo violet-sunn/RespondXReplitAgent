@@ -573,11 +573,22 @@ export class DatabaseStorage implements IStorage {
     if (environmentId === 1) {
       // Find the matching endpoint from our hardcoded list
       const demoEndpoints = await this.getSandboxApiEndpoints(1);
-      return demoEndpoints.find(endpoint => 
-        endpoint.apiType === apiType && 
-        endpoint.path === path && 
-        endpoint.method === method
-      );
+      
+      return demoEndpoints.find(endpoint => {
+        // Check API type and method first
+        if (endpoint.apiType !== apiType || endpoint.method !== method) {
+          return false;
+        }
+        
+        // For path matching, convert the endpoint path pattern to a regular expression
+        // Replace {param} placeholders with regex patterns that match any value
+        const endpointPathPattern = endpoint.path
+          .replace(/\{[^}]+\}/g, '([^/]+)') // Replace {param} with regex to match any non-slash chars
+          .replace(/\//g, '\\/'); // Escape forward slashes
+          
+        const pathRegex = new RegExp(`^${endpointPathPattern}$`);
+        return pathRegex.test(path);
+      });
     }
     
     try {
