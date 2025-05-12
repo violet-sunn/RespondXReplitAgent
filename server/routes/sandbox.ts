@@ -269,10 +269,13 @@ router.delete('/environments/:id/logs', async (req: any, res) => {
 // API Emulation for App Store Connect API
 router.all('/api/app-store/*', async (req, res) => {
   try {
-    const environmentId = parseInt(req.headers['x-sandbox-environment'] as string);
+    // Get environment ID from header or use demo environment (1) as default
+    let environmentId = parseInt(req.headers['x-sandbox-environment'] as string);
     
-    if (!environmentId) {
-      return res.status(400).json({ message: 'Missing sandbox environment ID' });
+    // If no environment ID is provided or it's invalid, use demo environment
+    if (!environmentId || isNaN(environmentId)) {
+      console.log('Using demo environment (ID: 1) for App Store API emulation');
+      environmentId = 1; // Default to the demo environment
     }
     
     const environment = await storage.getSandboxEnvironmentById(environmentId);
@@ -316,10 +319,13 @@ router.all('/api/app-store/*', async (req, res) => {
 // API Emulation for Google Play Developer API
 router.all('/api/google-play/*', async (req, res) => {
   try {
-    const environmentId = parseInt(req.headers['x-sandbox-environment'] as string);
+    // Get environment ID from header or use demo environment (1) as default
+    let environmentId = parseInt(req.headers['x-sandbox-environment'] as string);
     
-    if (!environmentId) {
-      return res.status(400).json({ message: 'Missing sandbox environment ID' });
+    // If no environment ID is provided or it's invalid, use demo environment
+    if (!environmentId || isNaN(environmentId)) {
+      console.log('Using demo environment (ID: 1) for Google Play API emulation');
+      environmentId = 1; // Default to the demo environment
     }
     
     const environment = await storage.getSandboxEnvironmentById(environmentId);
@@ -363,10 +369,13 @@ router.all('/api/google-play/*', async (req, res) => {
 // API Emulation for GigaChat API
 router.all('/api/gigachat/*', async (req, res) => {
   try {
-    const environmentId = parseInt(req.headers['x-sandbox-environment'] as string);
+    // Get environment ID from header or use demo environment (1) as default
+    let environmentId = parseInt(req.headers['x-sandbox-environment'] as string);
     
-    if (!environmentId) {
-      return res.status(400).json({ message: 'Missing sandbox environment ID' });
+    // If no environment ID is provided or it's invalid, use demo environment
+    if (!environmentId || isNaN(environmentId)) {
+      console.log('Using demo environment (ID: 1) for GigaChat API emulation');
+      environmentId = 1; // Default to the demo environment
     }
     
     const environment = await storage.getSandboxEnvironmentById(environmentId);

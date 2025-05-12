@@ -942,7 +942,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async clearSandboxLogs(environmentId: number): Promise<void> {
-    await db.delete(sandboxLogs).where(eq(sandboxLogs.environmentId, environmentId));
+    // For demo environment, just return without doing anything
+    if (environmentId === 1) {
+      console.log('Demo environment logs cannot be cleared');
+      return;
+    }
+    
+    try {
+      await db.delete(sandboxLogs).where(eq(sandboxLogs.environmentId, environmentId));
+    } catch (e) {
+      console.error('Error in clearSandboxLogs:', e);
+    }
   }
 }
 
