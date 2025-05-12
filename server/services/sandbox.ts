@@ -412,18 +412,27 @@ class SandboxService {
 
   /**
    * Customize GigaChat API response using request body
+   * Following Сбер GigaChat API documentation: https://developers.sber.ru/docs/ru/gigachat/api/overview
    */
   private customizeGigaChatResponse(endpointPath: string, requestBody: any, baseResponse: any): any {
     // Deep clone the base response to avoid modifying the original
     const response = JSON.parse(JSON.stringify(baseResponse));
     
-    // If it's a chat completion request
+    // If it's a chat completion request - основной эндпоинт для взаимодействия с моделью
     if (endpointPath.includes('chat/completions')) {
       let prompt = '';
+      let systemPrompt = '';
       
-      // Extract the prompt from the request body if available
+      // Extract the prompt and system instruction from the request body if available
+      // В запросе может быть массив messages с различными ролями: system, user, assistant
       if (requestBody && requestBody.messages && Array.isArray(requestBody.messages)) {
-        // Find the last user message
+        // Найдем system prompt (если есть)
+        const systemMessage = requestBody.messages.find(m => m.role === 'system');
+        if (systemMessage) {
+          systemPrompt = systemMessage.content || '';
+        }
+        
+        // Найдем последнее сообщение пользователя
         for (let i = requestBody.messages.length - 1; i >= 0; i--) {
           if (requestBody.messages[i].role === 'user') {
             prompt = requestBody.messages[i].content || '';
@@ -433,28 +442,112 @@ class SandboxService {
       }
       
       // Create a standard chat completion response if none exists
+      // Формат ответа соответствует документации GigaChat API
       if (!response.id || !response.choices) {
-        response.id = `chatcmpl-${Date.now()}`;
+        response.id = `cmpl-${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 6)}`;
         response.object = 'chat.completion';
         response.created = Math.floor(Date.now() / 1000);
-        response.model = requestBody?.model || 'giga-5';
+        response.model = requestBody?.model || 'GigaChat';
+        
+        // Генерируем контент с учетом system prompt если он есть
+        const content = this.generateAIResponse(prompt, systemPrompt);
+        
         response.choices = [{
           index: 0,
           message: {
             role: 'assistant',
-            content: this.generateAIResponse(prompt)
+            content: content
           },
           finish_reason: 'stop'
         }];
+        
+        // Согласно документации, добавляем usage информацию
+        response.usage = {
+          prompt_tokens: prompt.length + systemPrompt.length,
+          completion_tokens: content.length,
+          total_tokens: prompt.length + systemPrompt.length + content.length
+        };
       }
       // If choices exist but content is empty, generate a response
       else if (response.choices && response.choices.length > 0 && 
                response.choices[0].message && !response.choices[0].message.content) {
-        response.choices[0].message.content = this.generateAIResponse(prompt);
+        const content = this.generateAIResponse(prompt, systemPrompt);
+        response.choices[0].message.content = content;
+        
+        // Обновим usage если он существует
+        if (response.usage) {
+          response.usage.completion_tokens = content.length;
+          response.usage.total_tokens = (response.usage.prompt_tokens || 0) + content.length;
+        } else {
+          response.usage = {
+            prompt_tokens: prompt.length + systemPrompt.length,
+            completion_tokens: content.length,
+            total_tokens: prompt.length + systemPrompt.length + content.length
+          };
+        }
+      }
+    }
+    // Если это запрос на получение токена доступа через OAuth
+    else if (endpointPath.includes('oauth/token') || endpointPath.includes('auth/token')) {
+      // Имитация ответа с токеном доступа
+      if (!response.access_token) {
+        response.access_token = `sandbox_gigachat_token_${Date.now()}`;
+        response.token_type = "Bearer";
+        response.expires_in = 3600; // Срок действия токена в секундах (1 час)
+        response.scope = "GIGACHAT_API_PERS";
+      }
+    }
+    // Если это запрос на получение доступных моделей
+    else if (endpointPath.includes('models')) {
+      if (!response.data || !Array.isArray(response.data)) {
+        response.data = [
+          {
+            id: "GigaChat",
+            object: "model",
+            created: Math.floor(Date.now() / 1000) - 3600 * 24 * 30, // ~месяц назад
+            owned_by: "Sber"
+          },
+          {
+            id: "GigaChat-Pro",
+            object: "model",
+            created: Math.floor(Date.now() / 1000) - 3600 * 24 * 15, // ~2 недели назад
+            owned_by: "Sber"
+          }
+        ];
+        response.object = "list";
       }
     }
     
     return response;
+  }
+  
+  /**
+   * Generate sample GigaChat API response
+   */
+  getGigaChatResponseSample(prompt: string, systemPrompt: string = ''): any {
+    const content = this.generateAIResponse(prompt, systemPrompt);
+    
+    return {
+      id: `cmpl-${Date.now().toString(36)}`,
+      object: 'chat.completion',
+      created: Math.floor(Date.now() / 1000),
+      model: 'GigaChat',
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: 'assistant',
+            content: content
+          },
+          finish_reason: 'stop'
+        }
+      ],
+      usage: {
+        prompt_tokens: prompt.length + systemPrompt.length,
+        completion_tokens: content.length,
+        total_tokens: prompt.length + systemPrompt.length + content.length
+      }
+    };
   }
 
   /**
@@ -501,27 +594,7 @@ class SandboxService {
     };
   }
   
-  /**
-   * Generate sample GigaChat API response
-   */
-  getGigaChatResponseSample(prompt: string): any {
-    return {
-      id: `gigachat-${Date.now()}`,
-      object: 'chat.completion',
-      created: Math.floor(Date.now() / 1000),
-      model: 'gigachat-pro',
-      choices: [
-        {
-          index: 0,
-          message: {
-            role: 'assistant',
-            content: this.generateAIResponse(prompt)
-          },
-          finish_reason: 'stop'
-        }
-      ]
-    };
-  }
+  // Используется обновленная версия метода getGigaChatResponseSample определенная выше
   
   /**
    * Helper method to generate review text based on rating
@@ -542,17 +615,69 @@ class SandboxService {
   
   /**
    * Generate a simple AI response for testing
+   * @param prompt - The user's query
+   * @param systemPrompt - Optional system prompt that defines the AI's behavior
    */
-  private generateAIResponse(prompt: string): string {
-    // Simple test logic to generate different responses
-    if (prompt.toLowerCase().includes('thank')) {
-      return "We appreciate your feedback! We're constantly working to improve our app based on user suggestions like yours. Thank you for taking the time to share your thoughts with us.";
-    } else if (prompt.toLowerCase().includes('bug') || prompt.toLowerCase().includes('crash')) {
-      return "We're sorry to hear you're experiencing issues. Our team is actively investigating this problem. Could you please provide more details about when this occurs? This will help us resolve it faster.";
-    } else if (prompt.toLowerCase().includes('feature') || prompt.toLowerCase().includes('suggestion')) {
-      return "Thank you for your feature suggestion! We're always looking for ways to enhance our app. We've added this to our roadmap for consideration in future updates.";
-    } else {
-      return "Thank you for your review. We value all customer feedback and use it to improve our app. If you have any specific concerns or suggestions, please don't hesitate to contact our support team.";
+  private generateAIResponse(prompt: string, systemPrompt: string = ''): string {
+    // Check if we have a system prompt that should influence the response style
+    const isHelpfulStyle = !systemPrompt || 
+                           systemPrompt.toLowerCase().includes('helpful') || 
+                           systemPrompt.toLowerCase().includes('assistant');
+    
+    const isFormalStyle = systemPrompt.toLowerCase().includes('formal') || 
+                          systemPrompt.toLowerCase().includes('professional');
+    
+    const isTechnicalStyle = systemPrompt.toLowerCase().includes('technical') || 
+                            systemPrompt.toLowerCase().includes('expert');
+    
+    // If the prompt is empty, give a default response
+    if (!prompt.trim()) {
+      if (isFormalStyle) {
+        return "Благодарю за обращение. Чем я могу вам помочь?";
+      } else if (isTechnicalStyle) {
+        return "Готов ответить на ваши технические вопросы. Опишите, пожалуйста, вашу задачу.";
+      } else {
+        return "Здравствуйте! Я модель ИИ от Сбера, чем могу вам помочь?";
+      }
+    }
+    
+    // Simple test logic to generate different responses based on prompt content
+    if (prompt.toLowerCase().includes('спасибо') || prompt.toLowerCase().includes('благодар')) {
+      if (isFormalStyle) {
+        return "Благодарим вас за отзыв! Мы непрерывно работаем над улучшением нашего приложения на основе пользовательских отзывов. Признательны вам за то, что нашли время поделиться своим мнением.";
+      } else {
+        return "Спасибо за обратную связь! Мы постоянно улучшаем наше приложение, учитывая пожелания пользователей. Ваше мнение очень важно для нас.";
+      }
+    } 
+    else if (prompt.toLowerCase().includes('ошибк') || prompt.toLowerCase().includes('баг') || prompt.toLowerCase().includes('краш')) {
+      if (isTechnicalStyle) {
+        return "Мы зафиксировали ваше сообщение об ошибке. Для эффективной диагностики проблемы, пожалуйста, предоставьте следующую информацию: 1) версия ОС, 2) точные шаги воспроизведения, 3) скриншоты или логи ошибки если имеются. Наша техническая команда рассмотрит проблему в приоритетном порядке.";
+      } else {
+        return "Сожалеем о возникших проблемах. Наша команда активно работает над устранением этой ошибки. Не могли бы вы предоставить дополнительные детали о том, когда происходит сбой? Это поможет нам быстрее решить проблему.";
+      }
+    } 
+    else if (prompt.toLowerCase().includes('функци') || prompt.toLowerCase().includes('предложен') || prompt.toLowerCase().includes('улучшен')) {
+      return "Благодарим за ваше предложение по улучшению функционала! Мы всегда ищем способы сделать наше приложение лучше. Ваша идея добавлена в нашу дорожную карту для рассмотрения в будущих обновлениях.";
+    } 
+    else if (prompt.toLowerCase().includes('привет') || prompt.toLowerCase().includes('здравствуй')) {
+      if (isFormalStyle) {
+        return "Здравствуйте! Благодарим вас за обращение. Чем я могу вам помочь сегодня?";
+      } else {
+        return "Привет! Я ИИ-ассистент GigaChat от Сбера. Чем могу помочь?";
+      } 
+    }
+    else if (prompt.toLowerCase().includes('что ты') || prompt.toLowerCase().includes('кто ты') || prompt.toLowerCase().includes('какие твои')) {
+      return "Я GigaChat, разработанный компанией SberAI. Я создан для того, чтобы помогать людям и отвечать на их вопросы. Могу ассистировать в решении различных задач, предоставлять информацию и поддерживать беседу на разнообразные темы.";
+    }
+    else {
+      // Default response for other queries
+      if (isFormalStyle) {
+        return "Благодарим вас за обращение. Мы ценим мнение каждого клиента и используем его для улучшения нашего приложения. Если у вас есть какие-либо конкретные вопросы или предложения, пожалуйста, не стесняйтесь обращаться в нашу службу поддержки.";
+      } else if (isTechnicalStyle) {
+        return "Проанализировав ваш запрос, рекомендую обратить внимание на документацию API и примеры интеграции. Для более детального ответа потребуется дополнительный контекст. Готов предоставить техническую консультацию по конкретным аспектам вашего вопроса.";
+      } else {
+        return "Спасибо за ваше сообщение. Я готов помочь с ответами на ваши вопросы или предоставить необходимую информацию. Не стесняйтесь задавать уточняющие вопросы, если вам нужны дополнительные детали.";
+      }
     }
   }
   
