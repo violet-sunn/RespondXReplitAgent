@@ -1,0 +1,162 @@
+{
+  "common": {
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "loading": "Загрузка...",
+    "search": "Поиск",
+    "back": "Назад",
+    "next": "Далее"
+  },
+  "auth": {
+    "signIn": "Войти",
+    "signOut": "Выйти",
+    "signUp": "Зарегистрироваться"
+  },
+  "dashboard": {
+    "title": "Панель управления",
+    "overview": "Обзор",
+    "totalReviews": "Всего отзывов",
+    "avgRating": "Средняя оценка",
+    "responsesGenerated": "Сгенерировано ответов",
+    "recentActivity": "Последняя активность",
+    "reviewsByPlatform": "Отзывы по платформам",
+    "ratingDistribution": "Распределение оценок",
+    "reviewTrends": "Тенденции отзывов"
+  },
+  "reviews": {
+    "title": "Отзывы",
+    "all": "Все отзывы",
+    "filter": "Фильтр отзывов",
+    "sort": "Сортировка",
+    "platform": "Платформа",
+    "rating": "Оценка",
+    "date": "Дата",
+    "responded": "С ответом",
+    "unanswered": "Без ответа",
+    "generateResponse": "Сгенерировать ответ",
+    "sendResponse": "Отправить ответ",
+    "saveAsDraft": "Сохранить как черновик",
+    "viewResponse": "Просмотреть ответ"
+  },
+  "applications": {
+    "title": "Приложения",
+    "add": "Добавить приложение",
+    "edit": "Редактировать приложение",
+    "delete": "Удалить приложение",
+    "name": "Название",
+    "platform": "Платформа",
+    "appStore": "App Store",
+    "googlePlay": "Google Play",
+    "bundleId": "ID пакета",
+    "apiKey": "API ключ",
+    "apiSecret": "Секрет API",
+    "status": "Статус",
+    "active": "Активно",
+    "warning": "Предупреждение",
+    "error": "Ошибка",
+    "autoRespond": "Автоответ",
+    "syncReviews": "Синхронизировать отзывы",
+    "lastSynced": "Последняя синхронизация"
+  },
+  "ai": {
+    "settings": "Настройки ИИ",
+    "responseStyle": "Стиль ответа",
+    "friendly": "Дружелюбный",
+    "professional": "Профессиональный",
+    "casual": "Непринужденный",
+    "formal": "Формальный",
+    "maxResponseLength": "Максимальная длина ответа",
+    "characters": "символов",
+    "includeSignature": "Включить подпись",
+    "signature": "Подпись",
+    "apiKey": "API ключ OpenAI",
+    "model": "Модель ИИ",
+    "status": {
+      "title": "Статус ИИ",
+      "online": "Онлайн",
+      "offline": "Офлайн",
+      "version": "Версия"
+    },
+    "metrics": {
+      "generatedResponses": "Сгенерированные ответы",
+      "responseAccuracy": "Точность ответов",
+      "userSatisfaction": "Удовлетворенность пользователей"
+    },
+    "adjust": "Настроить параметры ИИ"
+  },
+  "settings": {
+    "title": "Настройки",
+    "account": "Аккаунт",
+    "profile": "Профиль",
+    "name": "Имя",
+    "email": "Электронная почта",
+    "updateProfile": "Обновить профиль",
+    "notifications": "Уведомления",
+    "emailNotifications": "Уведомления по электронной почте",
+    "reviewAlerts": "Оповещения о новых отзывах",
+    "responseAlerts": "Оповещения об ответах",
+    "dailyDigest": "Ежедневная сводка",
+    "marketingEmails": "Маркетинговые письма",
+    "language": "Язык",
+    "defaultLanguage": "Язык по умолчанию",
+    "autoDetectLanguage": "Автоопределение языка отзыва",
+    "selectLanguage": "Выберите язык"
+  },
+  "analytics": {
+    "title": "Аналитика",
+    "period": "Период",
+    "today": "Сегодня",
+    "week": "Эта неделя",
+    "month": "Этот месяц",
+    "quarter": "Этот квартал",
+    "year": "Этот год",
+    "custom": "Произвольный",
+    "metrics": {
+      "totalReviews": "Всего отзывов",
+      "reviewsChange": "Изменение количества отзывов",
+      "avgRating": "Средняя оценка",
+      "ratingChange": "Изменение оценки",
+      "responseRate": "Частота ответов",
+      "responseTime": "Время ответа"
+    },
+    "charts": {
+      "reviewsByPlatform": "Отзывы по платформам",
+      "ratingDistribution": "Распределение оценок",
+      "reviewTrends": "Тенденции отзывов",
+      "topKeywords": "Ключевые слова"
+    }
+  },
+  "sandbox": {
+    "title": "Песочница",
+    "environments": "Окружения",
+    "create": "Создать окружение",
+    "delete": "Удалить окружение",
+    "name": "Название",
+    "description": "Описание",
+    "type": "Тип",
+    "production": "Продакшн",
+    "testing": "Тестирование",
+    "active": "Активно",
+    "apiEndpoints": "API конечные точки",
+    "addEndpoint": "Добавить точку",
+    "path": "Путь",
+    "method": "Метод",
+    "responseType": "Тип ответа",
+    "success": "Успех",
+    "error": "Ошибка",
+    "timeout": "Тайм-аут",
+    "rateLimit": "Ограничение запросов",
+    "logs": "Логи",
+    "clearLogs": "Очистить логи",
+    "testing": {
+      "title": "Тестирование точки",
+      "run": "Запустить тест",
+      "results": "Результаты теста",
+      "status": "Статус",
+      "duration": "Длительность",
+      "response": "Ответ"
+    }
+  }
+}
