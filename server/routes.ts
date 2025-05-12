@@ -842,7 +842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If no environment ID is provided or it's invalid, use demo environment
       if (!environmentId || isNaN(environmentId)) {
-        console.log('Using demo environment (ID: 1) for GigaChat API emulation');
+        console.log('Using demo environment (ID: 1) for OpenAI API emulation');
         environmentId = 1; // Default to the demo environment
       }
       

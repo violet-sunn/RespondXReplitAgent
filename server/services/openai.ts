@@ -98,7 +98,7 @@ export async function testOpenAIAPIConnection(apiKey: string): Promise<OpenAITes
     // Step 3: Test chat completion
     try {
       const completionResponse = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        model: "gpt-3.5-turbo", // Using gpt-3.5-turbo as requested
         messages: [
           { role: "system", content: "You are a helpful assistant." },
           { role: "user", content: "Say hello in Russian." }
@@ -218,7 +218,7 @@ export async function generateAIResponse(
 
     // Prepare the request to the OpenAI API
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      model: "gpt-3.5-turbo", // Using gpt-3.5-turbo as requested
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt }
