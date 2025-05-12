@@ -330,7 +330,7 @@ export default function SandboxPage() {
                   <TabsList className="mb-4">
                     <TabsTrigger value="app-store">App Store Connect</TabsTrigger>
                     <TabsTrigger value="google-play">Google Play Developer</TabsTrigger>
-                    <TabsTrigger value="gigachat">GigaChat API</TabsTrigger>
+                    <TabsTrigger value="openai">OpenAI API</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="app-store">
@@ -456,10 +456,10 @@ export default function SandboxPage() {
                     </Card>
                   </TabsContent>
                   
-                  <TabsContent value="gigachat">
-                    <h3 className="text-lg font-semibold mb-4">GigaChat API Testing</h3>
+                  <TabsContent value="openai">
+                    <h3 className="text-lg font-semibold mb-4">OpenAI API Testing</h3>
                     <p className="text-gray-500 mb-4">
-                      Test GigaChat API endpoints with predefined responses or verify real API connection.
+                      Test OpenAI API endpoints with predefined responses or verify real API connection.
                     </p>
                     
                     <Tabs defaultValue="manual">
@@ -596,7 +596,7 @@ export default function SandboxPage() {
                                 setIsGenerating(true);
                                 setGeneratedResponse('');
                                 
-                                fetch('/api/sandbox/generate-response/gigachat', {
+                                fetch('/api/sandbox/generate-response/openai', {
                                   method: 'POST',
                                   headers: {
                                     'Content-Type': 'application/json',
@@ -650,7 +650,7 @@ export default function SandboxPage() {
                           <CardHeader>
                             <CardTitle>Generate AI Response (Sandbox)</CardTitle>
                             <CardDescription>
-                              POST /api/gigachat/v1/chat/completions
+                              POST /api/openai/v1/chat/completions
                             </CardDescription>
                           </CardHeader>
                           <CardContent>
