@@ -235,11 +235,18 @@ const validateBody = <T extends z.ZodType>(schema: T) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Replit Authentication
-  await setupAuth(app);
+  // Skip authentication for now
+  // await setupAuth(app);
 
-  // Authentication middleware (provided by replitAuth.ts)
-  const ensureAuthenticated = isAuthenticated;
+  // Mock guest authentication middleware (allows all requests)
+  const ensureAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+    // Add guest user to request
+    (req as any).user = {
+      id: "999999",
+      claims: { sub: "999999" }
+    };
+    next();
+  };
 
   // Auth routes with Replit Auth
   app.get('/api/auth/user', ensureAuthenticated, async (req: any, res) => {
