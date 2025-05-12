@@ -706,7 +706,7 @@ const Settings: React.FC = () => {
                       </div>
                       
                       <div className="space-y-3">
-                        <h3 className="text-md font-medium">GigaChat API</h3>
+                        <h3 className="text-md font-medium">OpenAI API</h3>
                         <div className="grid grid-cols-1 gap-3">
                           <div className="flex items-center justify-between p-3 border rounded-md">
                             <div>

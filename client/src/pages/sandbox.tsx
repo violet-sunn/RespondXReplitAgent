@@ -700,7 +700,7 @@ export default function SandboxPage() {
                                   ]
                                 };
                                 
-                                fetch('/api/gigachat/v1/chat/completions', {
+                                fetch('/api/openai/v1/chat/completions', {
                                   method: 'POST',
                                   headers: {
                                     'Content-Type': 'application/json',
@@ -732,7 +732,7 @@ export default function SandboxPage() {
                       <TabsContent value="real">
                         <Card className="mb-4">
                           <CardHeader>
-                            <CardTitle>Test Real GigaChat API Connection</CardTitle>
+                            <CardTitle>Test Real OpenAI API Connection</CardTitle>
                             <CardDescription>
                               Tests authentication, models retrieval, and response generation with real API
                             </CardDescription>
@@ -743,12 +743,12 @@ export default function SandboxPage() {
                                 <CheckCircle className="h-4 w-4 text-green-600" />
                                 <AlertTitle className="text-green-800">API Key Configured</AlertTitle>
                                 <AlertDescription className="text-green-700">
-                                  Your GigaChat API key is securely configured on the server. No need to enter it manually.
+                                  Your OpenAI API key is securely configured on the server. No need to enter it manually.
                                 </AlertDescription>
                               </Alert>
                               
                               <p className="text-sm text-gray-600">
-                                Click the Test button below to verify your GigaChat API connection and see available models.
+                                Click the Test button below to verify your OpenAI API connection and see available models.
                               </p>
                               
                               {testResult && (
@@ -871,7 +871,7 @@ export default function SandboxPage() {
                               )}
                             </Button>
                             <p className="text-xs text-gray-500 text-center">
-                              This will test your actual GigaChat API connection with all key components
+                              This will test your actual OpenAI API connection with all key components
                             </p>
                           </CardFooter>
                         </Card>
