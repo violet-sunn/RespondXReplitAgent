@@ -8,7 +8,7 @@ export const appStatusEnum = pgEnum('app_status', ['active', 'warning', 'error']
 export const reviewResponseStatusEnum = pgEnum('review_response_status', ['draft', 'approved', 'published']);
 export const responseStyleEnum = pgEnum('response_style', ['friendly', 'professional', 'casual', 'formal']);
 export const environmentTypeEnum = pgEnum('environment_type', ['production', 'sandbox']);
-export const apiTypeEnum = pgEnum('api_type', ['app_store_connect', 'google_play_developer', 'gigachat']);
+export const apiTypeEnum = pgEnum('api_type', ['app_store_connect', 'google_play_developer', 'openai']);
 export const testScenarioTypeEnum = pgEnum('test_scenario_type', ['success', 'error', 'timeout', 'rate_limit']);
 
 // Session storage table for Replit Auth

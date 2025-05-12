@@ -2,7 +2,7 @@ import { jsonb } from 'drizzle-orm/pg-core';
 import { apiTypeEnum, testScenarioTypeEnum } from '@shared/schema';
 import { storage } from '../storage';
 
-type SandboxApiType = 'app_store_connect' | 'google_play_developer' | 'gigachat';
+type SandboxApiType = 'app_store_connect' | 'google_play_developer' | 'openai';
 
 // Interface to define an API endpoint with parameters
 interface ParsedPath {
@@ -95,8 +95,8 @@ class SandboxService {
       }
     }
     
-    // For GigaChat API, provide default endpoints for common paths
-    if (apiType === 'gigachat') {
+    // For OpenAI API, provide default endpoints for common paths
+    if (apiType === 'openai') {
       // Создаем интерфейс для типизации эндпоинтов
       interface SandboxEndpoint {
         id: number;
@@ -107,47 +107,31 @@ class SandboxService {
         description: string;
       }
       
-      // Create dummy endpoint objects for the most common GigaChat API endpoints
-      const commonGigachatEndpoints: Record<string, SandboxEndpoint> = {
-        '/v1/oauth/token': {
+      // Create dummy endpoint objects for the most common OpenAI API endpoints
+      const commonOpenAIEndpoints: Record<string, SandboxEndpoint> = {
+        '/v1/chat/completions': {
           id: 10001,
           environmentId,
-          apiType: 'gigachat',
-          path: '/v1/oauth/token',
-          method: 'POST',
-          description: 'Получение OAuth токена для GigaChat API'
-        },
-        '/v1/chat/completions': {
-          id: 10002,
-          environmentId,
-          apiType: 'gigachat',
+          apiType: 'openai',
           path: '/v1/chat/completions',
           method: 'POST',
-          description: 'Генерирование ответа модели GigaChat'
+          description: 'Generate response from OpenAI model'
         },
         '/v1/models': {
-          id: 10003,
+          id: 10002,
           environmentId,
-          apiType: 'gigachat',
+          apiType: 'openai',
           path: '/v1/models',
           method: 'GET',
-          description: 'Получение списка доступных моделей GigaChat'
-        },
-        '/v1/auth/token': {
-          id: 10004,
-          environmentId,
-          apiType: 'gigachat',
-          path: '/v1/auth/token',
-          method: 'POST', 
-          description: 'Альтернативный эндпоинт для получения токена GigaChat'
+          description: 'Get available OpenAI models'
         },
         '/v1/embeddings': {
-          id: 10005,
+          id: 10003,
           environmentId,
-          apiType: 'gigachat',
+          apiType: 'openai',
           path: '/v1/embeddings',
           method: 'POST',
-          description: 'Получение векторных представлений (embeddings) для текста'
+          description: 'Generate embeddings for text'
         }
       };
       
