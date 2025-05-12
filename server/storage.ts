@@ -5,7 +5,11 @@ import {
   reviewResponses, type ReviewResponse, type InsertReviewResponse,
   aiSettings, type AISettings, type InsertAISettings,
   userSettings, type UserSettings, type InsertUserSettings,
-  analyticsData, type AnalyticsData, type InsertAnalyticsData
+  analyticsData, type AnalyticsData, type InsertAnalyticsData,
+  sandboxEnvironments, type SandboxEnvironment, type InsertSandboxEnvironment,
+  sandboxApiEndpoints, type SandboxApiEndpoint, type InsertSandboxApiEndpoint,
+  sandboxTestScenarios, type SandboxTestScenario, type InsertSandboxTestScenario,
+  sandboxLogs, type SandboxLog, type InsertSandboxLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, gte, like } from "drizzle-orm";
@@ -52,6 +56,33 @@ export interface IStorage {
   // Analytics methods
   createAnalyticsData(data: InsertAnalyticsData): Promise<AnalyticsData>;
   getAnalyticsData(userId: number, options?: { appId?: number, period?: string }): Promise<AnalyticsData[]>;
+  
+  // Sandbox Environment methods
+  getSandboxEnvironments(userId: string): Promise<SandboxEnvironment[]>;
+  getSandboxEnvironmentById(id: number): Promise<SandboxEnvironment | undefined>;
+  createSandboxEnvironment(environment: InsertSandboxEnvironment & { userId: string }): Promise<SandboxEnvironment>;
+  updateSandboxEnvironment(id: number, environmentData: Partial<InsertSandboxEnvironment>): Promise<SandboxEnvironment>;
+  deleteSandboxEnvironment(id: number): Promise<void>;
+  
+  // Sandbox API Endpoint methods
+  getSandboxApiEndpoints(environmentId: number): Promise<SandboxApiEndpoint[]>;
+  getSandboxApiEndpoint(environmentId: number, apiType: string, path: string, method: string): Promise<SandboxApiEndpoint | undefined>;
+  createSandboxApiEndpoint(endpoint: InsertSandboxApiEndpoint): Promise<SandboxApiEndpoint>;
+  updateSandboxApiEndpoint(id: number, endpointData: Partial<InsertSandboxApiEndpoint>): Promise<SandboxApiEndpoint>;
+  deleteSandboxApiEndpoint(id: number): Promise<void>;
+  
+  // Sandbox Test Scenario methods
+  getSandboxTestScenarios(endpointId: number): Promise<SandboxTestScenario[]>;
+  getSandboxTestScenario(endpointId: number, type: string): Promise<SandboxTestScenario | undefined>;
+  getDefaultSandboxTestScenario(endpointId: number): Promise<SandboxTestScenario | undefined>;
+  createSandboxTestScenario(scenario: InsertSandboxTestScenario): Promise<SandboxTestScenario>;
+  updateSandboxTestScenario(id: number, scenarioData: Partial<InsertSandboxTestScenario>): Promise<SandboxTestScenario>;
+  deleteSandboxTestScenario(id: number): Promise<void>;
+  
+  // Sandbox Log methods
+  getSandboxLogs(environmentId: number, options?: { limit?: number, offset?: number }): Promise<SandboxLog[]>;
+  createSandboxLog(log: InsertSandboxLog): Promise<SandboxLog>;
+  clearSandboxLogs(environmentId: number): Promise<void>;
 }
 
 // Database Storage implementation
@@ -406,6 +437,181 @@ export class DatabaseStorage implements IStorage {
     }
     
     return query.orderBy(analyticsData.date);
+  }
+
+  // Sandbox Environment methods
+  async getSandboxEnvironments(userId: string): Promise<SandboxEnvironment[]> {
+    return db.select().from(sandboxEnvironments).where(eq(sandboxEnvironments.userId, userId));
+  }
+
+  async getSandboxEnvironmentById(id: number): Promise<SandboxEnvironment | undefined> {
+    const [environment] = await db.select().from(sandboxEnvironments).where(eq(sandboxEnvironments.id, id));
+    return environment;
+  }
+
+  async createSandboxEnvironment(environment: InsertSandboxEnvironment & { userId: string }): Promise<SandboxEnvironment> {
+    const [result] = await db.insert(sandboxEnvironments).values(environment).returning();
+    return result;
+  }
+
+  async updateSandboxEnvironment(id: number, environmentData: Partial<InsertSandboxEnvironment>): Promise<SandboxEnvironment> {
+    const [result] = await db
+      .update(sandboxEnvironments)
+      .set({ ...environmentData, updatedAt: new Date() })
+      .where(eq(sandboxEnvironments.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteSandboxEnvironment(id: number): Promise<void> {
+    await db.delete(sandboxEnvironments).where(eq(sandboxEnvironments.id, id));
+  }
+
+  // Sandbox API Endpoint methods
+  async getSandboxApiEndpoints(environmentId: number): Promise<SandboxApiEndpoint[]> {
+    return db.select().from(sandboxApiEndpoints).where(eq(sandboxApiEndpoints.environmentId, environmentId));
+  }
+
+  async getSandboxApiEndpoint(
+    environmentId: number,
+    apiType: string,
+    path: string,
+    method: string
+  ): Promise<SandboxApiEndpoint | undefined> {
+    const [endpoint] = await db
+      .select()
+      .from(sandboxApiEndpoints)
+      .where(
+        and(
+          eq(sandboxApiEndpoints.environmentId, environmentId),
+          eq(sandboxApiEndpoints.apiType, apiType as any),
+          eq(sandboxApiEndpoints.path, path),
+          eq(sandboxApiEndpoints.method, method)
+        )
+      );
+    return endpoint;
+  }
+
+  async createSandboxApiEndpoint(endpoint: InsertSandboxApiEndpoint): Promise<SandboxApiEndpoint> {
+    const [result] = await db.insert(sandboxApiEndpoints).values(endpoint).returning();
+    return result;
+  }
+
+  async updateSandboxApiEndpoint(id: number, endpointData: Partial<InsertSandboxApiEndpoint>): Promise<SandboxApiEndpoint> {
+    const [result] = await db
+      .update(sandboxApiEndpoints)
+      .set({ ...endpointData, updatedAt: new Date() })
+      .where(eq(sandboxApiEndpoints.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteSandboxApiEndpoint(id: number): Promise<void> {
+    await db.delete(sandboxApiEndpoints).where(eq(sandboxApiEndpoints.id, id));
+  }
+
+  // Sandbox Test Scenario methods
+  async getSandboxTestScenarios(endpointId: number): Promise<SandboxTestScenario[]> {
+    return db.select().from(sandboxTestScenarios).where(eq(sandboxTestScenarios.endpointId, endpointId));
+  }
+
+  async getSandboxTestScenario(endpointId: number, type: string): Promise<SandboxTestScenario | undefined> {
+    const [scenario] = await db
+      .select()
+      .from(sandboxTestScenarios)
+      .where(
+        and(
+          eq(sandboxTestScenarios.endpointId, endpointId),
+          eq(sandboxTestScenarios.type, type as any)
+        )
+      );
+    return scenario;
+  }
+
+  async getDefaultSandboxTestScenario(endpointId: number): Promise<SandboxTestScenario | undefined> {
+    const [scenario] = await db
+      .select()
+      .from(sandboxTestScenarios)
+      .where(
+        and(
+          eq(sandboxTestScenarios.endpointId, endpointId),
+          eq(sandboxTestScenarios.isDefault, true)
+        )
+      );
+    return scenario;
+  }
+
+  async createSandboxTestScenario(scenario: InsertSandboxTestScenario): Promise<SandboxTestScenario> {
+    // If this is marked as default, unset any existing defaults for this endpoint
+    if (scenario.isDefault) {
+      await db
+        .update(sandboxTestScenarios)
+        .set({ isDefault: false })
+        .where(
+          and(
+            eq(sandboxTestScenarios.endpointId, scenario.endpointId),
+            eq(sandboxTestScenarios.isDefault, true)
+          )
+        );
+    }
+    
+    const [result] = await db.insert(sandboxTestScenarios).values(scenario).returning();
+    return result;
+  }
+
+  async updateSandboxTestScenario(id: number, scenarioData: Partial<InsertSandboxTestScenario>): Promise<SandboxTestScenario> {
+    // If this is being set as default, unset any existing defaults for this endpoint
+    if (scenarioData.isDefault) {
+      const [existingScenario] = await db.select().from(sandboxTestScenarios).where(eq(sandboxTestScenarios.id, id));
+      
+      if (existingScenario) {
+        await db
+          .update(sandboxTestScenarios)
+          .set({ isDefault: false })
+          .where(
+            and(
+              eq(sandboxTestScenarios.endpointId, existingScenario.endpointId),
+              eq(sandboxTestScenarios.isDefault, true),
+              // Don't update the current one
+              e => e.not(eq(sandboxTestScenarios.id, id))
+            )
+          );
+      }
+    }
+    
+    const [result] = await db
+      .update(sandboxTestScenarios)
+      .set({ ...scenarioData, updatedAt: new Date() })
+      .where(eq(sandboxTestScenarios.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteSandboxTestScenario(id: number): Promise<void> {
+    await db.delete(sandboxTestScenarios).where(eq(sandboxTestScenarios.id, id));
+  }
+
+  // Sandbox Log methods
+  async getSandboxLogs(environmentId: number, options?: { limit?: number, offset?: number }): Promise<SandboxLog[]> {
+    const limit = options?.limit || 100;
+    const offset = options?.offset || 0;
+    
+    return db
+      .select()
+      .from(sandboxLogs)
+      .where(eq(sandboxLogs.environmentId, environmentId))
+      .orderBy(desc(sandboxLogs.timestamp))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async createSandboxLog(log: InsertSandboxLog): Promise<SandboxLog> {
+    const [result] = await db.insert(sandboxLogs).values(log).returning();
+    return result;
+  }
+
+  async clearSandboxLogs(environmentId: number): Promise<void> {
+    await db.delete(sandboxLogs).where(eq(sandboxLogs.environmentId, environmentId));
   }
 }
 
