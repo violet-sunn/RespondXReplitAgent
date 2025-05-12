@@ -97,8 +97,18 @@ class SandboxService {
     
     // For GigaChat API, provide default endpoints for common paths
     if (apiType === 'gigachat') {
+      // Создаем интерфейс для типизации эндпоинтов
+      interface SandboxEndpoint {
+        id: number;
+        environmentId: number;
+        apiType: string;
+        path: string;
+        method: string;
+        description: string;
+      }
+      
       // Create dummy endpoint objects for the most common GigaChat API endpoints
-      const commonGigachatEndpoints = {
+      const commonGigachatEndpoints: Record<string, SandboxEndpoint> = {
         '/v1/oauth/token': {
           id: 10001,
           environmentId,
@@ -130,12 +140,22 @@ class SandboxService {
           path: '/v1/auth/token',
           method: 'POST', 
           description: 'Альтернативный эндпоинт для получения токена GigaChat'
+        },
+        '/v1/embeddings': {
+          id: 10005,
+          environmentId,
+          apiType: 'gigachat',
+          path: '/v1/embeddings',
+          method: 'POST',
+          description: 'Получение векторных представлений (embeddings) для текста'
         }
       };
       
       // Check if the path matches any of our default endpoints
       const pathWithoutParams = path.split('?')[0];
-      if (pathWithoutParams in commonGigachatEndpoints && 
+      
+      // Проверяем, существует ли путь в наших предопределенных эндпоинтах
+      if (Object.prototype.hasOwnProperty.call(commonGigachatEndpoints, pathWithoutParams) && 
           (method === 'POST' || method === 'GET')) {
         return commonGigachatEndpoints[pathWithoutParams];
       }
@@ -462,7 +482,7 @@ class SandboxService {
    */
   private customizeGigaChatResponse(endpointPath: string, requestBody: any, baseResponse: any): any {
     // Deep clone the base response to avoid modifying the original
-    const response = JSON.parse(JSON.stringify(baseResponse));
+    const response = JSON.parse(JSON.stringify(baseResponse || {}));
     
     // If it's a chat completion request - основной эндпоинт для взаимодействия с моделью
     if (endpointPath.includes('chat/completions')) {
@@ -472,16 +492,23 @@ class SandboxService {
       // Extract the prompt and system instruction from the request body if available
       // В запросе может быть массив messages с различными ролями: system, user, assistant
       if (requestBody && requestBody.messages && Array.isArray(requestBody.messages)) {
+        // Создаем тип для сообщений GigaChat
+        interface ChatMessage {
+          role: string;
+          content: string;
+        }
+        
         // Найдем system prompt (если есть)
-        const systemMessage = requestBody.messages.find(m => m.role === 'system');
+        const systemMessage = requestBody.messages.find((m: ChatMessage) => m.role === 'system');
         if (systemMessage) {
           systemPrompt = systemMessage.content || '';
         }
         
         // Найдем последнее сообщение пользователя
         for (let i = requestBody.messages.length - 1; i >= 0; i--) {
-          if (requestBody.messages[i].role === 'user') {
-            prompt = requestBody.messages[i].content || '';
+          const message = requestBody.messages[i] as ChatMessage;
+          if (message.role === 'user') {
+            prompt = message.content || '';
             break;
           }
         }
@@ -490,7 +517,7 @@ class SandboxService {
       // Create a standard chat completion response if none exists
       // Формат ответа соответствует документации GigaChat API
       if (!response.id || !response.choices) {
-        response.id = `cmpl-${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 6)}`;
+        response.id = `cmpl-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
         response.object = 'chat.completion';
         response.created = Math.floor(Date.now() / 1000);
         response.model = requestBody?.model || 'GigaChat';
@@ -535,32 +562,96 @@ class SandboxService {
     }
     // Если это запрос на получение токена доступа через OAuth
     else if (endpointPath.includes('oauth/token') || endpointPath.includes('auth/token')) {
-      // Имитация ответа с токеном доступа
+      // Check if the request has the necessary fields according to GigaChat documentation
+      const hasValidScope = requestBody && 
+        (requestBody.scope === 'GIGACHAT_API_PERS' || 
+         requestBody.scope === 'GIGACHAT_API_CORP');
+      
+      // Correct format for OAuth token response
       if (!response.access_token) {
+        if (!hasValidScope) {
+          // If the scope is invalid, return an error
+          return {
+            error: 'invalid_scope',
+            error_description: 'Requested scope is invalid. Please use GIGACHAT_API_PERS or GIGACHAT_API_CORP',
+            status: 400
+          };
+        }
+        
+        // Normal successful response
         response.access_token = `sandbox_gigachat_token_${Date.now()}`;
         response.token_type = "Bearer";
         response.expires_in = 3600; // Срок действия токена в секундах (1 час)
-        response.scope = "GIGACHAT_API_PERS";
+        response.scope = requestBody?.scope || "GIGACHAT_API_PERS";
       }
     }
     // Если это запрос на получение доступных моделей
-    else if (endpointPath.includes('models')) {
+    else if (endpointPath.includes('/v1/models')) {
       if (!response.data || !Array.isArray(response.data)) {
         response.data = [
           {
             id: "GigaChat",
             object: "model",
             created: Math.floor(Date.now() / 1000) - 3600 * 24 * 30, // ~месяц назад
-            owned_by: "Sber"
+            owned_by: "Sber",
+            capabilities: {
+              embeddings: false,
+              chat_completion: true
+            }
           },
           {
             id: "GigaChat-Pro",
             object: "model",
             created: Math.floor(Date.now() / 1000) - 3600 * 24 * 15, // ~2 недели назад
-            owned_by: "Sber"
+            owned_by: "Sber",
+            capabilities: {
+              embeddings: false,
+              chat_completion: true
+            }
+          },
+          {
+            id: "GigaChat-Plus",
+            object: "model", 
+            created: Math.floor(Date.now() / 1000) - 3600 * 24 * 7, // ~неделю назад
+            owned_by: "Sber",
+            capabilities: {
+              embeddings: true,
+              chat_completion: true
+            }
           }
         ];
         response.object = "list";
+      }
+    }
+    // Если это запрос на получение embeddings (векторных представлений)
+    else if (endpointPath.includes('/v1/embeddings')) {
+      if (!response.data || !Array.isArray(response.data)) {
+        // Генерируем случайные embeddings для демо
+        const input = requestBody?.input || '';
+        const dimensions = requestBody?.dimensions || 1024;
+        const inputText = Array.isArray(input) ? input[0] : input;
+        
+        // Генерируем фиксированный по длине вектор на основе входного текста
+        const embeddings = Array(dimensions).fill(0)
+          .map((_, i) => (Math.sin(i * (inputText.length || 1)) + 1) / 2);
+        
+        // Нормализуем вектор, чтобы сумма квадратов была равна 1
+        const sum = Math.sqrt(embeddings.reduce((acc, val) => acc + val * val, 0));
+        const normalized = embeddings.map(val => val / sum);
+        
+        response.object = "list";
+        response.data = [
+          {
+            object: "embedding",
+            embedding: normalized,
+            index: 0
+          }
+        ];
+        response.model = requestBody?.model || "GigaChat-Plus";
+        response.usage = {
+          prompt_tokens: inputText.length,
+          total_tokens: inputText.length
+        };
       }
     }
     
