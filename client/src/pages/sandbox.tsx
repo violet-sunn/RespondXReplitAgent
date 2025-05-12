@@ -658,7 +658,7 @@ export default function SandboxPage() {
                               <div>
                                 <Label>Sample Request</Label>
                                 <div className="mt-2 p-4 bg-gray-50 rounded-md font-mono text-sm overflow-x-auto">
-                                  curl -X POST "http://localhost:5000/api/gigachat/v1/chat/completions" \<br/>
+                                  curl -X POST "http://localhost:5000/api/openai/v1/chat/completions" \<br/>
                                   &nbsp;&nbsp;-H "X-Sandbox-Environment: 1" \<br/>
                                   &nbsp;&nbsp;-H "Content-Type: application/json" \<br/>
                                   &nbsp;&nbsp;-d '{`{"model": "gpt-3.5-turbo", "messages": [{"role": "system", "content": "You are a helpful assistant"}, {"role": "user", "content": "Generate a response for a 3-star review"}]}`}'
