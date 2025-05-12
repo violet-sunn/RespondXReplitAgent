@@ -11,6 +11,7 @@ import { generateAIResponse } from "./services/openai";
 import { fetchAppStoreReviews } from "./services/appstore";
 import { fetchGooglePlayReviews } from "./services/playstore";
 import sandboxRouter from "./routes/sandbox";
+import settingsRouter from "./routes/settings";
 import { sandboxService } from "./services/sandbox";
 
 // Mock data for development purposes
