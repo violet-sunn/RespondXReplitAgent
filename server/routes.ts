@@ -577,15 +577,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/settings', ensureAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
+      const parsedUserId = typeof userId === 'string' ? parseInt(userId) : userId;
+      
+      console.log(`Fetching settings for user ID: ${userId} (parsed: ${parsedUserId})`);
       
       // Fetch user profile
       const user = await storage.getUser(userId);
+      console.log('User profile:', user);
       
       // Fetch AI settings
-      const aiSettings = await storage.getAISettings(parseInt(userId));
+      let aiSettings = null;
+      try {
+        aiSettings = await storage.getAISettings(parsedUserId);
+        console.log('AI settings:', aiSettings);
+      } catch (error) {
+        console.error('Error fetching AI settings:', error);
+      }
       
       // Fetch notification settings
-      const notificationSettings = await storage.getUserSettings(parseInt(userId));
+      let notificationSettings = null;
+      try {
+        notificationSettings = await storage.getUserSettings(parsedUserId);
+        console.log('User settings:', notificationSettings);
+      } catch (error) {
+        console.error('Error fetching user settings:', error);
+      }
       
       // Combine all settings
       const settings = {
@@ -707,14 +723,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const userId = (req.user as any).id;
         
-        // Update language settings
-        const settings = await storage.updateUserSettings(userId, req.body);
+        // Update language settings - convert string ID to number if needed
+        const parsedUserId = typeof userId === 'string' ? parseInt(userId) : userId;
+        
+        let settings;
+        try {
+          // Check if settings exist
+          const existingSettings = await storage.getUserSettings(parsedUserId);
+          
+          if (existingSettings) {
+            // Update existing settings
+            settings = await storage.updateUserSettings(parsedUserId, req.body);
+          } else {
+            // Create new settings
+            settings = await storage.createUserSettings({
+              ...req.body,
+              userId: parsedUserId
+            });
+          }
+        } catch (error) {
+          console.error('Error working with user settings:', error);
+          // Create new settings if we got an error (likely settings don't exist)
+          settings = await storage.createUserSettings({
+            ...req.body,
+            userId: parsedUserId
+          });
+        }
         
         res.json({
           defaultLanguage: settings.defaultLanguage,
           autoDetectLanguage: settings.autoDetectLanguage
         });
       } catch (error) {
+        console.error('Error updating language settings:', error);
         res.status(500).json({ message: 'Error updating language settings' });
       }
     }
