@@ -711,10 +711,10 @@ export default function SandboxPage() {
                                 .then(response => response.json())
                                 .then(data => {
                                   alert('Response received! Check console for details.');
-                                  console.log('GigaChat API response:', data);
+                                  console.log('OpenAI API response:', data);
                                 })
                                 .catch(error => {
-                                  console.error('Error testing GigaChat API:', error);
+                                  console.error('Error testing OpenAI API:', error);
                                   alert('Error: ' + error.message);
                                 });
                               }}
@@ -836,7 +836,7 @@ export default function SandboxPage() {
                                 setIsLoading(true);
                                 setTestResult(null);
                                 
-                                fetch('/api/sandbox/test-connection/gigachat', {
+                                fetch('/api/sandbox/test-connection/openai', {
                                   method: 'POST',
                                   headers: {
                                     'Content-Type': 'application/json',
@@ -849,7 +849,7 @@ export default function SandboxPage() {
                                   setIsLoading(false);
                                 })
                                 .catch(error => {
-                                  console.error('Error testing real GigaChat API:', error);
+                                  console.error('Error testing real OpenAI API:', error);
                                   setTestResult({
                                     success: false,
                                     message: `Connection test failed: ${error.message}`

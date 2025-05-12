@@ -416,8 +416,8 @@ router.all('/api/openai-direct/*', async (req, res) => {
     
     res.status(response.statusCode).json(response.data);
   } catch (error) {
-    console.error('Error in GigaChat API emulation:', error);
-    res.status(500).json({ message: 'Sandbox error in GigaChat API emulation' });
+    console.error('Error in OpenAI API emulation:', error);
+    res.status(500).json({ message: 'Sandbox error in OpenAI API emulation' });
   }
 });
 
