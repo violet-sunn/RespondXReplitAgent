@@ -4,10 +4,100 @@ import { storage } from '../storage';
 
 type SandboxApiType = 'app_store_connect' | 'google_play_developer' | 'gigachat';
 
+// Interface to define an API endpoint with parameters
+interface ParsedPath {
+  pattern: RegExp;
+  paramNames: string[];
+  originalPath: string;
+}
+
 /**
  * Manages sandbox environment endpoints and test scenarios
  */
 class SandboxService {
+  // Cache for parsed API endpoint paths to avoid recomputation
+  private pathCache: Record<string, ParsedPath> = {};
+
+  /**
+   * Parse API path with parameters, converting to RegExp pattern
+   * Converts paths like "/v1/apps/{app_id}/reviews" to a regex pattern
+   */
+  private parsePathPattern(path: string): ParsedPath {
+    // Return from cache if already parsed
+    if (this.pathCache[path]) {
+      return this.pathCache[path];
+    }
+
+    const paramNames: string[] = [];
+    
+    // Escape regex special characters and replace {param} with regex capture groups
+    const pattern = path
+      .replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+      .replace(/\{([^/]+?)\}/g, (_, paramName) => {
+        paramNames.push(paramName);
+        return '([^/]+?)';
+      });
+    
+    const parsedPath: ParsedPath = {
+      pattern: new RegExp(`^${pattern}$`),
+      paramNames,
+      originalPath: path
+    };
+    
+    // Cache the parsed result
+    this.pathCache[path] = parsedPath;
+    
+    return parsedPath;
+  }
+
+  /**
+   * Extract path parameters from a URL path
+   */
+  private extractPathParams(path: string, endpointPath: string): Record<string, string> {
+    const parsedPath = this.parsePathPattern(endpointPath);
+    const match = path.match(parsedPath.pattern);
+    
+    // If no match, return empty object
+    if (!match) {
+      return {};
+    }
+    
+    // Create params object using the captured groups (starting from index 1)
+    const params: Record<string, string> = {};
+    parsedPath.paramNames.forEach((paramName, i) => {
+      params[paramName] = match[i + 1];
+    });
+    
+    return params;
+  }
+
+  /**
+   * Find best matching endpoint for a path, considering path parameters
+   */
+  private async findMatchingEndpoint(environmentId: number, apiType: SandboxApiType, path: string, method: string) {
+    // First try exact match
+    const exactMatch = await storage.getSandboxApiEndpoint(environmentId, apiType, path, method);
+    if (exactMatch) {
+      return exactMatch;
+    }
+    
+    // If no exact match, get all endpoints for the environment and API type
+    const endpoints = await storage.getSandboxApiEndpoints(environmentId);
+    const apiEndpoints = endpoints.filter(e => e.apiType === apiType && e.method === method);
+    
+    // Check for pattern matches
+    for (const endpoint of apiEndpoints) {
+      const parsedPath = this.parsePathPattern(endpoint.path);
+      const match = path.match(parsedPath.pattern);
+      
+      if (match) {
+        return endpoint;
+      }
+    }
+    
+    return null;
+  }
+
   /**
    * Get sample response data from the sandbox for a specific API type and endpoint
    * 
@@ -31,13 +121,16 @@ class SandboxService {
     delay: number;
   }> {
     try {
-      // Find the endpoint
-      const endpoint = await storage.getSandboxApiEndpoint(environmentId, apiType, path, method);
+      // Find the endpoint using pattern matching
+      const endpoint = await this.findMatchingEndpoint(environmentId, apiType, path, method);
       
       if (!endpoint) {
         return {
           statusCode: 404,
-          data: { error: 'Endpoint not found' },
+          data: { 
+            error: 'Endpoint not found',
+            message: `No matching endpoint found for ${method} ${path} in ${apiType} API`
+          },
           headers: { 'Content-Type': 'application/json' },
           delay: 0
         };
