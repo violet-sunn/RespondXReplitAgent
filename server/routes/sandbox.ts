@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { storage } from '../storage';
 import { isAuthenticated } from '../replitAuth';
 import { sandboxService } from '../services/sandbox';
-import { testGigaChatAPIConnection } from '../services/gigachat';
+import { testOpenAIAPIConnection } from '../services/openai';
 import { 
   insertSandboxEnvironmentSchema, 
   insertSandboxApiEndpointSchema,
@@ -11,7 +11,7 @@ import {
   type Review,
   type AISettings
 } from '@shared/schema';
-import { generateAIResponse } from '../services/gigachat';
+import { generateAIResponse } from '../services/openai';
 
 const router = Router();
 
@@ -534,27 +534,27 @@ async function createDefaultTestScenarios(endpointId: number) {
 // These routes allow testing connections to actual APIs, not just simulations
 
 // Test route for real GigaChat API connection using environment variable
-router.post('/test-connection/gigachat', async (req, res) => {
+router.post('/test-connection/openai', async (req, res) => {
   try {
     // Use API key from environment variable
-    const apiKey = process.env.GIGACHAT_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     
     if (!apiKey) {
       return res.status(500).json({ 
         success: false, 
-        message: 'GigaChat API key not configured in server environment'
+        message: 'OpenAI API key not configured in server environment'
       });
     }
     
     // Test the real API connection
-    const result = await testGigaChatAPIConnection(apiKey);
+    const result = await testOpenAIAPIConnection(apiKey);
     
     res.json(result);
   } catch (error) {
-    console.error('Error testing GigaChat API connection:', error);
+    console.error('Error testing OpenAI API connection:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Failed to test GigaChat API connection',
+      message: 'Failed to test OpenAI API connection',
       error: error instanceof Error ? error.message : String(error)
     });
   }
