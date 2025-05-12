@@ -139,9 +139,9 @@ class SandboxService {
       const pathWithoutParams = path.split('?')[0];
       
       // Проверяем, существует ли путь в наших предопределенных эндпоинтах
-      if (Object.prototype.hasOwnProperty.call(commonGigachatEndpoints, pathWithoutParams) && 
+      if (Object.prototype.hasOwnProperty.call(commonOpenAIEndpoints, pathWithoutParams) && 
           (method === 'POST' || method === 'GET')) {
-        return commonGigachatEndpoints[pathWithoutParams];
+        return commonOpenAIEndpoints[pathWithoutParams];
       }
     }
     
@@ -367,8 +367,8 @@ class SandboxService {
         responseData = this.customizeAppStoreResponse(endpoint.path, pathParams, responseData);
       } else if (apiType === 'google_play_developer') {
         responseData = this.customizeGooglePlayResponse(endpoint.path, pathParams, responseData);
-      } else if (apiType === 'gigachat') {
-        responseData = this.customizeGigaChatResponse(endpoint.path, requestBody, responseData);
+      } else if (apiType === 'openai') {
+        responseData = this.customizeOpenAIResponse(endpoint.path, requestBody, responseData);
       }
       
       // Log the request
@@ -610,10 +610,10 @@ class SandboxService {
   }
 
   /**
-   * Customize GigaChat API response using request body
-   * Following Сбер GigaChat API documentation: https://developers.sber.ru/docs/ru/gigachat/api/overview
+   * Customize OpenAI API response using request body
+   * Following OpenAI API documentation: https://platform.openai.com/docs/api-reference
    */
-  private customizeGigaChatResponse(endpointPath: string, requestBody: any, baseResponse: any): any {
+  private customizeOpenAIResponse(endpointPath: string, requestBody: any, baseResponse: any): any {
     // Deep clone the base response to avoid modifying the original
     const response = JSON.parse(JSON.stringify(baseResponse || {}));
     
@@ -723,30 +723,30 @@ class SandboxService {
       if (!response.data || !Array.isArray(response.data)) {
         response.data = [
           {
-            id: "GigaChat",
+            id: "gpt-4o",
             object: "model",
-            created: Math.floor(Date.now() / 1000) - 3600 * 24 * 30, // ~месяц назад
-            owned_by: "Sber",
+            created: Math.floor(Date.now() / 1000) - 3600 * 24 * 10, // ~10 days ago
+            owned_by: "OpenAI",
             capabilities: {
               embeddings: false,
               chat_completion: true
             }
           },
           {
-            id: "GigaChat-Pro",
+            id: "gpt-4-turbo",
             object: "model",
-            created: Math.floor(Date.now() / 1000) - 3600 * 24 * 15, // ~2 недели назад
-            owned_by: "Sber",
+            created: Math.floor(Date.now() / 1000) - 3600 * 24 * 30, // ~1 month ago
+            owned_by: "OpenAI",
             capabilities: {
               embeddings: false,
               chat_completion: true
             }
           },
           {
-            id: "GigaChat-Plus",
+            id: "gpt-3.5-turbo",
             object: "model", 
-            created: Math.floor(Date.now() / 1000) - 3600 * 24 * 7, // ~неделю назад
-            owned_by: "Sber",
+            created: Math.floor(Date.now() / 1000) - 3600 * 24 * 90, // ~3 months ago
+            owned_by: "OpenAI",
             capabilities: {
               embeddings: true,
               chat_completion: true
