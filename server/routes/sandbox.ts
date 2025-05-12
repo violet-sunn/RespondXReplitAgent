@@ -371,15 +371,15 @@ router.all('/api/google-play-direct/*', async (req, res) => {
   }
 });
 
-// API Emulation for GigaChat API
-router.all('/api/gigachat-direct/*', async (req, res) => {
+// API Emulation for OpenAI API
+router.all('/api/openai-direct/*', async (req, res) => {
   try {
     // Get environment ID from header or use demo environment (1) as default
     let environmentId = parseInt(req.headers['x-sandbox-environment'] as string);
     
     // If no environment ID is provided or it's invalid, use demo environment
     if (!environmentId || isNaN(environmentId)) {
-      console.log('Using demo environment (ID: 1) for GigaChat API emulation');
+      console.log('Using demo environment (ID: 1) for OpenAI API emulation');
       environmentId = 1; // Default to the demo environment
     }
     
@@ -393,12 +393,12 @@ router.all('/api/gigachat-direct/*', async (req, res) => {
       return res.status(400).json({ message: 'Sandbox environment is not active' });
     }
     
-    const path = req.path.replace('/api/gigachat-direct', '');
+    const path = req.path.replace('/api/openai-direct', '');
     const scenario = req.query.scenario as string || undefined;
     
     const response = await sandboxService.getResponseForEndpoint(
       environmentId,
-      'gigachat',
+      'openai',
       path,
       req.method,
       scenario as any
@@ -458,10 +458,10 @@ async function createDefaultApiEndpoints(environmentId: number) {
       description: 'Respond to a Google Play review'
     });
     
-    // GigaChat API endpoints
+    // OpenAI API endpoints
     await storage.createSandboxApiEndpoint({
       environmentId,
-      apiType: 'gigachat',
+      apiType: 'openai',
       path: '/v1/chat/completions',
       method: 'POST',
       description: 'Generate AI response'
@@ -560,24 +560,24 @@ router.post('/test-connection/openai', async (req, res) => {
   }
 });
 
-// Generate review response using real GigaChat API from environment variable
-router.post('/generate-response/gigachat', async (req, res) => {
+// Generate review response using real OpenAI API from environment variable
+router.post('/generate-response/openai', async (req, res) => {
   try {
     const { 
       reviewText, 
       reviewRating = 3, 
       appName = 'App', 
       responseStyle = 'professional',
-      language = 'ru'
+      language = 'en'
     } = req.body;
     
     // Use the API key from environment variables
-    const apiKey = process.env.GIGACHAT_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     
     if (!apiKey) {
       return res.status(500).json({
         success: false,
-        message: 'GigaChat API key not configured in server environment'
+        message: 'OpenAI API key not configured in server environment'
       });
     }
     
@@ -612,9 +612,9 @@ router.post('/generate-response/gigachat', async (req, res) => {
       userId: 0,
       apiKey: null, // We'll use API key from environment
       responseStyle: responseStyle as any,
-      maxTokens: 1000,
-      temperature: 0.7,
-      language: language,
+      maxResponseLength: 1000,
+      includeSignature: false,
+      signature: null,
       createdAt: new Date(),
       updatedAt: new Date()
     } as AISettings;
@@ -631,7 +631,7 @@ router.post('/generate-response/gigachat', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error generating response with GigaChat API:', error);
+    console.error('Error generating response with OpenAI API:', error);
     return res.status(500).json({
       success: false,
       message: `Error generating response: ${error instanceof Error ? error.message : 'Unknown error'}`,
