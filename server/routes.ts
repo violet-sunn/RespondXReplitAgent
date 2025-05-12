@@ -718,10 +718,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const clients = new Set();
   
   // Function to broadcast message to all connected clients
-  const broadcastMessage = (data) => {
+  const broadcastMessage = (data: any) => {
     const message = JSON.stringify(data);
     wss.clients.forEach((client) => {
-      if (client.readyState === WebSocketServer.OPEN) {
+      if (client.readyState === WebSocket.OPEN) {
         client.send(message);
       }
     });
@@ -772,12 +772,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               timestamp: new Date().toISOString()
             }));
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error processing WebSocket message:', error);
         ws.send(JSON.stringify({
           type: 'error',
           message: 'Failed to process message',
-          error: error.message
+          error: error?.message || 'Unknown error'
         }));
       }
     });
