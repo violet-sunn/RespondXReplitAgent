@@ -327,7 +327,18 @@ class SandboxService {
         
         // Log this request in the sandbox logs if possible
         try {
-          await this.logRequest(environmentId, endpoint.id, 0, method, path, requestBody, statusCode, responseData);
+          await this.logRequest(
+            environmentId, 
+            endpoint.id, 
+            0, // scenarioId 
+            method, 
+            path, 
+            null, // requestHeaders 
+            requestBody, 
+            statusCode, 
+            responseData,
+            0 // duration
+          );
         } catch (error) {
           console.warn('Could not log sandbox request:', error);
         }
@@ -905,6 +916,41 @@ class SandboxService {
     const isTechnicalStyle = systemPrompt.toLowerCase().includes('technical') || 
                             systemPrompt.toLowerCase().includes('expert');
     
+    // Determine if the context is for app review responses
+    const isAppReviewContext = systemPrompt.toLowerCase().includes('отзыв') || 
+                               systemPrompt.toLowerCase().includes('review') ||
+                               systemPrompt.toLowerCase().includes('customer support') ||
+                               systemPrompt.toLowerCase().includes('support agent') ||
+                               systemPrompt.toLowerCase().includes('мобильны') ||
+                               systemPrompt.toLowerCase().includes('приложени');
+
+    // Check if the prompt is about generating a response to a review
+    const isReviewResponseRequest = prompt.toLowerCase().includes('ответ на отзыв') ||
+                                    prompt.toLowerCase().includes('негативный отзыв') ||
+                                    prompt.toLowerCase().includes('положительный отзыв') ||
+                                    (prompt.toLowerCase().includes('отзыв') && 
+                                     prompt.toLowerCase().includes('приложени')) ||
+                                    prompt.toLowerCase().includes('review response') ||
+                                    (prompt.toLowerCase().includes('составь') && 
+                                     prompt.toLowerCase().includes('ответ'));
+
+    // Check if the prompt contains a negative review pattern
+    const hasNegativeReviewPattern = prompt.toLowerCase().includes('вылетает') ||
+                                    prompt.toLowerCase().includes('не работает') ||
+                                    prompt.toLowerCase().includes('ошибка') ||
+                                    prompt.toLowerCase().includes('проблема') ||
+                                    prompt.toLowerCase().includes('краш') ||
+                                    prompt.toLowerCase().includes('сбой') ||
+                                    prompt.toLowerCase().includes('баг') ||
+                                    prompt.toLowerCase().includes('буг');
+                                    
+    const hasPositiveReviewPattern = prompt.toLowerCase().includes('отличное приложение') ||
+                                   prompt.toLowerCase().includes('нравится приложение') ||
+                                   prompt.toLowerCase().includes('5 звезд') ||
+                                   prompt.toLowerCase().includes('5 stars') ||
+                                   prompt.toLowerCase().includes('положительный') ||
+                                   prompt.toLowerCase().includes('хорошее приложение');
+    
     // If the prompt is empty, give a default response
     if (!prompt.trim()) {
       if (isFormalStyle) {
@@ -916,7 +962,37 @@ class SandboxService {
       }
     }
     
-    // Simple test logic to generate different responses based on prompt content
+    // Special handling for review response requests from our previous test case
+    if (isReviewResponseRequest || (isAppReviewContext && hasNegativeReviewPattern)) {
+      if (hasNegativeReviewPattern) {
+        // Responses for negative reviews
+        const negativeResponses = [
+          "Уважаемый пользователь, благодарим за обратную связь! Мы искренне сожалеем о возникших проблемах и уже работаем над их устранением. Наша команда разработчиков приняла ваш отзыв к сведению, и в ближайшем обновлении мы исправим указанные ошибки. Пожалуйста, не стесняйтесь обращаться в нашу службу поддержки для более быстрого решения вашей проблемы.",
+          
+          "Спасибо за ваш отзыв! Мы приносим извинения за неудобства, с которыми вы столкнулись при использовании нашего приложения. Ваше мнение очень важно для нас, и мы серьезно относимся к сообщениям о технических проблемах. Наша команда уже анализирует ситуацию и в ближайшее время выпустит обновление, которое решит указанную проблему со статистикой. Для получения дополнительной помощи, пожалуйста, свяжитесь с нашей поддержкой.",
+          
+          "Мы ценим вашу честную обратную связь и приносим извинения за проблемы, возникшие при использовании раздела статистики. Это действительно важная функция, и мы понимаем ваше разочарование. Наша команда уже выявила причину этой ошибки и активно работает над её устранением. Обновление с исправлением будет выпущено в самое ближайшее время. Благодарим за сообщение об этой проблеме."
+        ];
+        
+        return negativeResponses[Math.floor(Math.random() * negativeResponses.length)];
+      } else if (hasPositiveReviewPattern) {
+        // Responses for positive reviews
+        const positiveResponses = [
+          "Большое спасибо за ваш положительный отзыв! Мы очень рады, что вам нравится наше приложение. Ваша поддержка мотивирует нас становиться ещё лучше. Мы продолжим работать над улучшением функциональности и пользовательского опыта.",
+          
+          "Благодарим за высокую оценку нашего приложения! Нам очень приятно, что наш продукт оправдывает ваши ожидания. Мы постоянно работаем над новыми функциями и улучшениями, которые сделают ваш опыт использования ещё более приятным.",
+          
+          "Спасибо за тёплые слова и высокую оценку! Мы вкладываем много усилий в создание качественного продукта, и ваш отзыв — лучшая награда для нашей команды. Будем рады вашим предложениям по дальнейшему улучшению приложения."
+        ];
+        
+        return positiveResponses[Math.floor(Math.random() * positiveResponses.length)];
+      } else {
+        // General review response
+        return "Благодарим вас за обратную связь! Мы внимательно изучаем все отзывы пользователей и используем их для улучшения нашего приложения. Ваше мнение очень важно для нас, и мы рады, что вы нашли время поделиться своими впечатлениями. Если у вас возникнут дополнительные вопросы или предложения, не стесняйтесь обращаться в нашу службу поддержки.";
+      }
+    }
+    
+    // Existing logic for other types of prompts
     if (prompt.toLowerCase().includes('спасибо') || prompt.toLowerCase().includes('благодар')) {
       if (isFormalStyle) {
         return "Благодарим вас за отзыв! Мы непрерывно работаем над улучшением нашего приложения на основе пользовательских отзывов. Признательны вам за то, что нашли время поделиться своим мнением.";
