@@ -704,6 +704,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Mount sandbox routes
   app.use('/api/sandbox', sandboxRouter);
+  
+  // API Emulation proxy routes for sandbox
+  app.all('/api/app-store/*', (req, res) => {
+    // Forward to sandbox route
+    const newPath = req.path.replace('/api/app-store', '/api/sandbox/api/app-store-direct');
+    req.url = newPath + (req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '');
+    sandboxRouter(req, res);
+  });
+  
+  app.all('/api/google-play/*', (req, res) => {
+    // Forward to sandbox route
+    const newPath = req.path.replace('/api/google-play', '/api/sandbox/api/google-play-direct');
+    req.url = newPath + (req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '');
+    sandboxRouter(req, res);
+  });
+  
+  app.all('/api/gigachat/*', (req, res) => {
+    // Forward to sandbox route
+    const newPath = req.path.replace('/api/gigachat', '/api/sandbox/api/gigachat-direct');
+    req.url = newPath + (req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '');
+    sandboxRouter(req, res);
+  });
 
   const httpServer = createServer(app);
 

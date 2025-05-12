@@ -267,7 +267,8 @@ router.delete('/environments/:id/logs', async (req: any, res) => {
 });
 
 // API Emulation for App Store Connect API
-router.all('/api/app-store/*', async (req, res) => {
+// Maps directly to /api/sandbox/api/app-store/* to avoid Vite processing
+router.all('/api/app-store-direct/*', async (req, res) => {
   try {
     // Get environment ID from header or use demo environment (1) as default
     let environmentId = parseInt(req.headers['x-sandbox-environment'] as string);
@@ -288,7 +289,7 @@ router.all('/api/app-store/*', async (req, res) => {
       return res.status(400).json({ message: 'Sandbox environment is not active' });
     }
     
-    const path = req.path.replace('/api/app-store', '');
+    const path = req.path.replace('/api/app-store-direct', '');
     const scenario = req.query.scenario as string || undefined;
     
     const response = await sandboxService.getResponseForEndpoint(
@@ -317,7 +318,7 @@ router.all('/api/app-store/*', async (req, res) => {
 });
 
 // API Emulation for Google Play Developer API
-router.all('/api/google-play/*', async (req, res) => {
+router.all('/api/google-play-direct/*', async (req, res) => {
   try {
     // Get environment ID from header or use demo environment (1) as default
     let environmentId = parseInt(req.headers['x-sandbox-environment'] as string);
@@ -338,7 +339,7 @@ router.all('/api/google-play/*', async (req, res) => {
       return res.status(400).json({ message: 'Sandbox environment is not active' });
     }
     
-    const path = req.path.replace('/api/google-play', '');
+    const path = req.path.replace('/api/google-play-direct', '');
     const scenario = req.query.scenario as string || undefined;
     
     const response = await sandboxService.getResponseForEndpoint(
@@ -367,7 +368,7 @@ router.all('/api/google-play/*', async (req, res) => {
 });
 
 // API Emulation for GigaChat API
-router.all('/api/gigachat/*', async (req, res) => {
+router.all('/api/gigachat-direct/*', async (req, res) => {
   try {
     // Get environment ID from header or use demo environment (1) as default
     let environmentId = parseInt(req.headers['x-sandbox-environment'] as string);
@@ -388,7 +389,7 @@ router.all('/api/gigachat/*', async (req, res) => {
       return res.status(400).json({ message: 'Sandbox environment is not active' });
     }
     
-    const path = req.path.replace('/api/gigachat', '');
+    const path = req.path.replace('/api/gigachat-direct', '');
     const scenario = req.query.scenario as string || undefined;
     
     const response = await sandboxService.getResponseForEndpoint(
