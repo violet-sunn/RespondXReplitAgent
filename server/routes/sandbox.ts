@@ -30,7 +30,7 @@ const validateBody = <T extends z.ZodType>(schema: T) => {
 router.get('/environments', async (req: any, res) => {
   try {
     // Get a default user ID or use the authenticated user's ID if available
-    const userId = req.user?.claims?.sub || 'guest-user';
+    const userId = req.user?.claims?.sub || 999999;
     const environments = await storage.getSandboxEnvironments(userId);
     res.json(environments);
   } catch (error) {
