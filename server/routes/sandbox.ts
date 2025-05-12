@@ -191,7 +191,7 @@ router.post('/environments/:id/endpoints',
 );
 
 // Test Scenarios
-router.get('/endpoints/:id/scenarios', isAuthenticated, async (req: any, res) => {
+router.get('/endpoints/:id/scenarios', async (req: any, res) => {
   try {
     const endpointId = parseInt(req.params.id);
     const scenarios = await storage.getSandboxTestScenarios(endpointId);
@@ -223,9 +223,8 @@ router.post('/endpoints/:id/scenarios',
 );
 
 // Logs
-router.get('/environments/:id/logs', isAuthenticated, async (req: any, res) => {
+router.get('/environments/:id/logs', async (req: any, res) => {
   try {
-    const userId = req.user.claims.sub;
     const environmentId = parseInt(req.params.id);
     
     const environment = await storage.getSandboxEnvironmentById(environmentId);
@@ -234,9 +233,7 @@ router.get('/environments/:id/logs', isAuthenticated, async (req: any, res) => {
       return res.status(404).json({ message: 'Sandbox environment not found' });
     }
     
-    if (environment.userId !== userId) {
-      return res.status(403).json({ message: 'Unauthorized access to sandbox environment' });
-    }
+    // Remove user verification to allow public access
     
     const limit = req.query.limit ? parseInt(req.query.limit) : undefined;
     const offset = req.query.offset ? parseInt(req.query.offset) : undefined;
@@ -249,9 +246,8 @@ router.get('/environments/:id/logs', isAuthenticated, async (req: any, res) => {
   }
 });
 
-router.delete('/environments/:id/logs', isAuthenticated, async (req: any, res) => {
+router.delete('/environments/:id/logs', async (req: any, res) => {
   try {
-    const userId = req.user.claims.sub;
     const environmentId = parseInt(req.params.id);
     
     const environment = await storage.getSandboxEnvironmentById(environmentId);
@@ -260,9 +256,7 @@ router.delete('/environments/:id/logs', isAuthenticated, async (req: any, res) =
       return res.status(404).json({ message: 'Sandbox environment not found' });
     }
     
-    if (environment.userId !== userId) {
-      return res.status(403).json({ message: 'Unauthorized access to sandbox environment' });
-    }
+    // Remove user verification to allow public access
     
     await storage.clearSandboxLogs(environmentId);
     res.status(204).end();
