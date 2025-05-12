@@ -86,7 +86,7 @@ export async function testGigaChatAPIConnection(apiKey: string): Promise<GigaCha
     
     try {
       const authResponse = await axios.post<GigaChatTokenResponse>(
-        'https://gigachat-api.sbercloud.ru/api/v1/oauth/token',
+        'https://api.gigachat.io/v1/token',
         { scope: 'GIGACHAT_API_PERS' },
         {
           headers: {
@@ -119,7 +119,7 @@ export async function testGigaChatAPIConnection(apiKey: string): Promise<GigaCha
     // Step 2: Test retrieving models
     try {
       const modelsResponse = await axios.get(
-        'https://gigachat-api.sbercloud.ru/api/v1/models',
+        'https://api.gigachat.io/v1/models',
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`
@@ -148,7 +148,7 @@ export async function testGigaChatAPIConnection(apiKey: string): Promise<GigaCha
     // Step 3: Test chat completion
     try {
       const completionResponse = await axios.post<GigaChatResponse>(
-        'https://gigachat-api.sbercloud.ru/api/v1/chat/completions',
+        'https://api.gigachat.io/v1/chat/completions',
         {
           model: 'GigaChat',
           messages: [
@@ -274,7 +274,7 @@ export async function generateAIResponse(
 
     // Prepare the request to the GigaChat API
     const response = await axios.post<GigaChatResponse>(
-      'https://gigachat-api.sbercloud.ru/api/v1/chat/completions',
+      'https://api.gigachat.io/v1/chat/completions',
       {
         model: 'GigaChat',
         messages: [
