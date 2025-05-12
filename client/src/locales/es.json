@@ -7,7 +7,17 @@
     "loading": "Cargando...",
     "search": "Buscar",
     "back": "Atrás",
-    "next": "Siguiente"
+    "next": "Siguiente",
+    "user": "Usuario",
+    "error": "Error"
+  },
+  "nav": {
+    "dashboard": "Panel de control",
+    "reviews": "Reseñas",
+    "applications": "Aplicaciones",
+    "analytics": "Analítica",
+    "settings": "Configuración",
+    "realtimeDemo": "Demo en tiempo real"
   },
   "auth": {
     "signIn": "Iniciar sesión",

@@ -14,32 +14,32 @@ const Sidebar: React.FC = () => {
   const navItems = [
     { 
       path: "/", 
-      label: "Dashboard", 
+      label: t("nav.dashboard"), 
       icon: <LayoutDashboard className="mr-3 flex-shrink-0 text-lg" /> 
     },
     { 
       path: "/reviews", 
-      label: "Reviews", 
+      label: t("nav.reviews"), 
       icon: <MessageCircle className="mr-3 flex-shrink-0 text-lg" /> 
     },
     { 
       path: "/applications", 
-      label: "Applications", 
+      label: t("nav.applications"), 
       icon: <AppWindow className="mr-3 flex-shrink-0 text-lg" /> 
     },
     { 
       path: "/analytics", 
-      label: "Analytics", 
+      label: t("nav.analytics"), 
       icon: <LineChart className="mr-3 flex-shrink-0 text-lg" /> 
     },
     { 
       path: "/settings", 
-      label: "Settings", 
+      label: t("nav.settings"), 
       icon: <Settings className="mr-3 flex-shrink-0 text-lg" /> 
     },
     { 
       path: "/websocket-demo", 
-      label: "Realtime Demo", 
+      label: t("nav.realtimeDemo"), 
       icon: <WifiIcon className="mr-3 flex-shrink-0 text-lg" /> 
     }
   ];
@@ -81,6 +81,12 @@ const Sidebar: React.FC = () => {
           </nav>
           
           <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+            {/* Language Selector */}
+            <div className="mb-4">
+              <LanguageSelector size="sm" />
+            </div>
+            
+            {/* User Section */}
             {isAuthenticated ? (
               <div className="flex items-center">
                 <div>
@@ -92,7 +98,7 @@ const Sidebar: React.FC = () => {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                    {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User' : 'User'}
+                    {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || t('common.user') : t('common.user')}
                   </p>
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{user?.email || 'user@example.com'}</p>
                 </div>
@@ -100,6 +106,7 @@ const Sidebar: React.FC = () => {
                   type="button" 
                   className="ml-auto flex-shrink-0 bg-white dark:bg-gray-700 p-1 rounded-full text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
                   onClick={() => logout()}
+                  aria-label={t('auth.logout')}
                 >
                   <LogOut className="h-5 w-5" />
                 </button>
@@ -110,7 +117,7 @@ const Sidebar: React.FC = () => {
                 onClick={() => login()}
               >
                 <LogIn className="mr-2 h-4 w-4" />
-                Sign In
+                {t('auth.signIn')}
               </Button>
             )}
           </div>

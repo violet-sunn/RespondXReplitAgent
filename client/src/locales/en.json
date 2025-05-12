@@ -7,7 +7,17 @@
     "loading": "Loading...",
     "search": "Search",
     "back": "Back",
-    "next": "Next"
+    "next": "Next",
+    "user": "User",
+    "error": "Error"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "reviews": "Reviews",
+    "applications": "Applications",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "realtimeDemo": "Realtime Demo"
   },
   "auth": {
     "signIn": "Sign In",
