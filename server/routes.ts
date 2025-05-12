@@ -884,9 +884,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(response.statusCode).json(response.data);
     } catch (error) {
-      console.error('Error in GigaChat API emulation:', error);
+      console.error('Error in OpenAI API emulation:', error);
       res.status(500).json({ 
-        message: 'Sandbox error in GigaChat API emulation',
+        message: 'Sandbox error in OpenAI API emulation',
         error: error instanceof Error ? error.message : String(error)
       });
     }

@@ -222,7 +222,7 @@ class SandboxService {
             id: `cmpl-${Date.now().toString(36)}`,
             object: 'chat.completion',
             created: Math.floor(Date.now() / 1000),
-            model: requestBody?.model || 'GigaChat',
+            model: requestBody?.model || 'gpt-3.5-turbo',
             choices: [
               {
                 index: 0,
@@ -301,7 +301,7 @@ class SandboxService {
                 index: 0
               }
             ],
-            model: requestBody?.model || "GigaChat-Plus",
+            model: requestBody?.model || "gpt-3.5-turbo",
             usage: {
               prompt_tokens: inputText.length,
               total_tokens: inputText.length
@@ -653,7 +653,7 @@ class SandboxService {
         response.id = `cmpl-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
         response.object = 'chat.completion';
         response.created = Math.floor(Date.now() / 1000);
-        response.model = requestBody?.model || 'GigaChat';
+        response.model = requestBody?.model || 'gpt-3.5-turbo';
         
         // Генерируем контент с учетом system prompt если он есть
         const content = this.generateAIResponse(prompt, systemPrompt);
@@ -780,7 +780,7 @@ class SandboxService {
             index: 0
           }
         ];
-        response.model = requestBody?.model || "GigaChat-Plus";
+        response.model = requestBody?.model || "gpt-3.5-turbo";
         response.usage = {
           prompt_tokens: inputText.length,
           total_tokens: inputText.length
@@ -792,16 +792,16 @@ class SandboxService {
   }
   
   /**
-   * Generate sample GigaChat API response
+   * Generate sample OpenAI API response
    */
-  getGigaChatResponseSample(prompt: string, systemPrompt: string = ''): any {
+  getOpenAIResponseSample(prompt: string, systemPrompt: string = ''): any {
     const content = this.generateAIResponse(prompt, systemPrompt);
     
     return {
       id: `cmpl-${Date.now().toString(36)}`,
       object: 'chat.completion',
       created: Math.floor(Date.now() / 1000),
-      model: 'GigaChat',
+      model: 'gpt-3.5-turbo',
       choices: [
         {
           index: 0,
