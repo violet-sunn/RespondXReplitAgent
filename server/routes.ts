@@ -11,6 +11,7 @@ import { generateAIResponse } from "./services/gigachat";
 import { fetchAppStoreReviews } from "./services/appstore";
 import { fetchGooglePlayReviews } from "./services/playstore";
 import sandboxRouter from "./routes/sandbox";
+import { sandboxService } from "./services/sandbox";
 
 // Mock data for development purposes
 const mockDashboardStats = {
@@ -705,26 +706,163 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mount sandbox routes
   app.use('/api/sandbox', sandboxRouter);
   
-  // API Emulation proxy routes for sandbox
-  app.all('/api/app-store/*', (req, res) => {
-    // Forward to sandbox route
-    const newPath = req.path.replace('/api/app-store', '/api/sandbox/api/app-store-direct');
-    req.url = newPath + (req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '');
-    sandboxRouter(req, res);
+  // Direct API Emulation endpoints
+  app.all('/api/app-store/*', async (req, res) => {
+    try {
+      // Get environment ID from header or use demo environment (1) as default
+      let environmentId = parseInt(req.headers['x-sandbox-environment'] as string);
+      
+      // If no environment ID is provided or it's invalid, use demo environment
+      if (!environmentId || isNaN(environmentId)) {
+        console.log('Using demo environment (ID: 1) for App Store API emulation');
+        environmentId = 1; // Default to the demo environment
+      }
+      
+      const environment = await storage.getSandboxEnvironmentById(environmentId);
+      
+      if (!environment) {
+        return res.status(404).json({ message: 'Sandbox environment not found' });
+      }
+      
+      if (!environment.isActive) {
+        return res.status(400).json({ message: 'Sandbox environment is not active' });
+      }
+      
+      const path = req.path.replace('/api/app-store', '');
+      const scenario = req.query.scenario as string || undefined;
+      
+      // Import the sandbox service
+      const { sandboxService } = await import('./services/sandbox');
+      
+      const response = await sandboxService.getResponseForEndpoint(
+        environmentId,
+        'app_store_connect',
+        path,
+        req.method,
+        scenario as any
+      );
+      
+      // Apply simulated delay if specified
+      if (response.delay > 0) {
+        await new Promise(resolve => setTimeout(resolve, response.delay));
+      }
+      
+      // Set response headers
+      for (const [key, value] of Object.entries(response.headers)) {
+        res.setHeader(key, value);
+      }
+      
+      res.status(response.statusCode).json(response.data);
+    } catch (error) {
+      console.error('Error in App Store Connect API emulation:', error);
+      res.status(500).json({ message: 'Sandbox error in App Store Connect API emulation' });
+    }
   });
   
-  app.all('/api/google-play/*', (req, res) => {
-    // Forward to sandbox route
-    const newPath = req.path.replace('/api/google-play', '/api/sandbox/api/google-play-direct');
-    req.url = newPath + (req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '');
-    sandboxRouter(req, res);
+  // Direct API emulation for Google Play
+  app.all('/api/google-play/*', async (req, res) => {
+    try {
+      // Get environment ID from header or use demo environment (1) as default
+      let environmentId = parseInt(req.headers['x-sandbox-environment'] as string);
+      
+      // If no environment ID is provided or it's invalid, use demo environment
+      if (!environmentId || isNaN(environmentId)) {
+        console.log('Using demo environment (ID: 1) for Google Play API emulation');
+        environmentId = 1; // Default to the demo environment
+      }
+      
+      const environment = await storage.getSandboxEnvironmentById(environmentId);
+      
+      if (!environment) {
+        return res.status(404).json({ message: 'Sandbox environment not found' });
+      }
+      
+      if (!environment.isActive) {
+        return res.status(400).json({ message: 'Sandbox environment is not active' });
+      }
+      
+      const path = req.path.replace('/api/google-play', '');
+      const scenario = req.query.scenario as string || undefined;
+      
+      // Import the sandbox service
+      const { sandboxService } = await import('./services/sandbox');
+      
+      const response = await sandboxService.getResponseForEndpoint(
+        environmentId,
+        'google_play_developer',
+        path,
+        req.method,
+        scenario as any
+      );
+      
+      // Apply simulated delay if specified
+      if (response.delay > 0) {
+        await new Promise(resolve => setTimeout(resolve, response.delay));
+      }
+      
+      // Set response headers
+      for (const [key, value] of Object.entries(response.headers)) {
+        res.setHeader(key, value);
+      }
+      
+      res.status(response.statusCode).json(response.data);
+    } catch (error) {
+      console.error('Error in Google Play Developer API emulation:', error);
+      res.status(500).json({ message: 'Sandbox error in Google Play Developer API emulation' });
+    }
   });
   
-  app.all('/api/gigachat/*', (req, res) => {
-    // Forward to sandbox route
-    const newPath = req.path.replace('/api/gigachat', '/api/sandbox/api/gigachat-direct');
-    req.url = newPath + (req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '');
-    sandboxRouter(req, res);
+  // Direct API emulation for GigaChat
+  app.all('/api/gigachat/*', async (req, res) => {
+    try {
+      // Get environment ID from header or use demo environment (1) as default
+      let environmentId = parseInt(req.headers['x-sandbox-environment'] as string);
+      
+      // If no environment ID is provided or it's invalid, use demo environment
+      if (!environmentId || isNaN(environmentId)) {
+        console.log('Using demo environment (ID: 1) for GigaChat API emulation');
+        environmentId = 1; // Default to the demo environment
+      }
+      
+      const environment = await storage.getSandboxEnvironmentById(environmentId);
+      
+      if (!environment) {
+        return res.status(404).json({ message: 'Sandbox environment not found' });
+      }
+      
+      if (!environment.isActive) {
+        return res.status(400).json({ message: 'Sandbox environment is not active' });
+      }
+      
+      const path = req.path.replace('/api/gigachat', '');
+      const scenario = req.query.scenario as string || undefined;
+      
+      // Import the sandbox service
+      const { sandboxService } = await import('./services/sandbox');
+      
+      const response = await sandboxService.getResponseForEndpoint(
+        environmentId,
+        'gigachat',
+        path,
+        req.method,
+        scenario as any
+      );
+      
+      // Apply simulated delay if specified
+      if (response.delay > 0) {
+        await new Promise(resolve => setTimeout(resolve, response.delay));
+      }
+      
+      // Set response headers
+      for (const [key, value] of Object.entries(response.headers)) {
+        res.setHeader(key, value);
+      }
+      
+      res.status(response.statusCode).json(response.data);
+    } catch (error) {
+      console.error('Error in GigaChat API emulation:', error);
+      res.status(500).json({ message: 'Sandbox error in GigaChat API emulation' });
+    }
   });
 
   const httpServer = createServer(app);
