@@ -101,14 +101,12 @@ export const aiSettings = pgTable("ai_settings", {
 // User Settings Table
 export const userSettings = pgTable("user_settings", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  // Notification settings
+  userId: integer("user_id").references(() => users.id).notNull(),
   emailNotifications: boolean("email_notifications").default(true).notNull(),
   reviewAlerts: boolean("review_alerts").default(true).notNull(),
   responseAlerts: boolean("response_alerts").default(true).notNull(),
   dailyDigest: boolean("daily_digest").default(true).notNull(),
   marketingEmails: boolean("marketing_emails").default(false).notNull(),
-  // Language settings
   defaultLanguage: text("default_language").default("en").notNull(),
   autoDetectLanguage: boolean("auto_detect_language").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

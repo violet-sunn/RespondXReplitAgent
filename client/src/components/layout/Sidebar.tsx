@@ -1,45 +1,42 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, MessageCircle, AppWindow, LineChart, Settings, LogOut, WifiIcon, LogIn, Globe } from "lucide-react";
+import { LayoutDashboard, MessageCircle, AppWindow, LineChart, Settings, LogOut, WifiIcon, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import LanguageSelector from "@/components/ui/LanguageSelector";
 
 const Sidebar: React.FC = () => {
   const [location] = useLocation();
   const { user, isAuthenticated, login, logout } = useAuth();
-  const { t } = useLanguage();
 
   const navItems = [
     { 
       path: "/", 
-      label: t("nav.dashboard"), 
+      label: "Dashboard", 
       icon: <LayoutDashboard className="mr-3 flex-shrink-0 text-lg" /> 
     },
     { 
       path: "/reviews", 
-      label: t("nav.reviews"), 
+      label: "Reviews", 
       icon: <MessageCircle className="mr-3 flex-shrink-0 text-lg" /> 
     },
     { 
       path: "/applications", 
-      label: t("nav.applications"), 
+      label: "Applications", 
       icon: <AppWindow className="mr-3 flex-shrink-0 text-lg" /> 
     },
     { 
       path: "/analytics", 
-      label: t("nav.analytics"), 
+      label: "Analytics", 
       icon: <LineChart className="mr-3 flex-shrink-0 text-lg" /> 
     },
     { 
       path: "/settings", 
-      label: t("nav.settings"), 
+      label: "Settings", 
       icon: <Settings className="mr-3 flex-shrink-0 text-lg" /> 
     },
     { 
       path: "/websocket-demo", 
-      label: t("nav.realtimeDemo"), 
+      label: "Realtime Demo", 
       icon: <WifiIcon className="mr-3 flex-shrink-0 text-lg" /> 
     }
   ];
@@ -81,12 +78,6 @@ const Sidebar: React.FC = () => {
           </nav>
           
           <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-            {/* Language Selector */}
-            <div className="mb-4">
-              <LanguageSelector size="sm" />
-            </div>
-            
-            {/* User Section */}
             {isAuthenticated ? (
               <div className="flex items-center">
                 <div>
@@ -98,7 +89,7 @@ const Sidebar: React.FC = () => {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                    {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || t('common.user') : t('common.user')}
+                    {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User' : 'User'}
                   </p>
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{user?.email || 'user@example.com'}</p>
                 </div>
@@ -106,7 +97,6 @@ const Sidebar: React.FC = () => {
                   type="button" 
                   className="ml-auto flex-shrink-0 bg-white dark:bg-gray-700 p-1 rounded-full text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
                   onClick={() => logout()}
-                  aria-label={t('auth.logout')}
                 >
                   <LogOut className="h-5 w-5" />
                 </button>
@@ -117,7 +107,7 @@ const Sidebar: React.FC = () => {
                 onClick={() => login()}
               >
                 <LogIn className="mr-2 h-4 w-4" />
-                {t('auth.signIn')}
+                Sign In
               </Button>
             )}
           </div>
