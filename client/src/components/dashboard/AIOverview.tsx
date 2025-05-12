@@ -71,12 +71,11 @@ const AIOverview: React.FC = () => {
                 </div>
               </div>
               <div className="mt-2">
-                <Progress value={generatedResponsesPercentage} className={cn("h-2", "bg-primary-100 dark:bg-primary-900")} />
-                <style dangerouslySetInnerHTML={{ __html: `
-                  .progress-indicator-primary {
-                    background-color: var(--primary-500);
-                  }
-                `}} />
+                <Progress 
+                  value={generatedResponsesPercentage} 
+                  className={cn("h-2", "bg-primary-100 dark:bg-primary-900")}
+                  indicatorClassName="bg-blue-500 dark:bg-blue-400" 
+                />
               </div>
             </div>
             
@@ -86,12 +85,11 @@ const AIOverview: React.FC = () => {
                 <div className="text-sm font-medium text-gray-900 dark:text-white">{responseAccuracy}%</div>
               </div>
               <div className="mt-2">
-                <Progress value={responseAccuracy} className={cn("h-2", "bg-secondary-100 dark:bg-secondary-900")} />
-                <style dangerouslySetInnerHTML={{ __html: `
-                  .progress-indicator-secondary {
-                    background-color: var(--secondary-500);
-                  }
-                `}} />
+                <Progress 
+                  value={responseAccuracy} 
+                  className={cn("h-2", "bg-secondary-100 dark:bg-secondary-900")}
+                  indicatorClassName="bg-purple-500 dark:bg-purple-400"
+                />
               </div>
             </div>
             
@@ -101,12 +99,11 @@ const AIOverview: React.FC = () => {
                 <div className="text-sm font-medium text-gray-900 dark:text-white">{userSatisfaction}%</div>
               </div>
               <div className="mt-2">
-                <Progress value={userSatisfaction} className={cn("h-2", "bg-amber-100 dark:bg-amber-900")} />
-                <style dangerouslySetInnerHTML={{ __html: `
-                  .progress-indicator-amber {
-                    background-color: var(--amber-500);
-                  }
-                `}} />
+                <Progress 
+                  value={userSatisfaction} 
+                  className={cn("h-2", "bg-amber-100 dark:bg-amber-900")}
+                  indicatorClassName="bg-amber-500 dark:bg-amber-400"
+                />
               </div>
             </div>
           </div>
