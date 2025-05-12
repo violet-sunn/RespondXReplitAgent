@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { storage } from '../storage';
 import { isAuthenticated } from '../replitAuth';
 import { sandboxService } from '../services/sandbox';
+import { testGigaChatAPIConnection } from '../services/gigachat';
 import { 
   insertSandboxEnvironmentSchema, 
   insertSandboxApiEndpointSchema,
@@ -525,5 +526,37 @@ async function createDefaultTestScenarios(endpointId: number) {
     console.error('Error creating default test scenarios:', error);
   }
 }
+
+// Real API Connection Testing Routes
+// These routes allow testing connections to actual APIs, not just simulations
+
+// Import the GigaChat service
+import { testGigaChatAPIConnection } from '../services/gigachat';
+
+// Test route for real GigaChat API connection
+router.post('/test-connection/gigachat', async (req, res) => {
+  try {
+    const { apiKey } = req.body;
+    
+    if (!apiKey) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'API key is required for testing GigaChat API connection'
+      });
+    }
+    
+    // Test the real API connection
+    const result = await testGigaChatAPIConnection(apiKey);
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error testing GigaChat API connection:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to test GigaChat API connection',
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
 
 export default router;

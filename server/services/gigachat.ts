@@ -16,6 +16,197 @@ interface GigaChatResponse {
     };
     finish_reason: string;
   }[];
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+// Interface for GigaChat Token Response
+interface GigaChatTokenResponse {
+  access_token: string;
+  expires_at?: number;
+  token_type: string;
+}
+
+// Interface for GigaChat API Test Result
+export interface GigaChatTestResult {
+  success: boolean;
+  message: string;
+  details?: {
+    authTest?: {
+      success: boolean;
+      message: string;
+      token?: string;
+    };
+    modelsTest?: {
+      success: boolean;
+      message: string;
+      models?: string[];
+    };
+    completionTest?: {
+      success: boolean;
+      message: string;
+      response?: string;
+    };
+  };
+}
+
+/**
+ * Test connection to GigaChat API with real credentials
+ * Tests authentication, retrieving models, and generating completions
+ * 
+ * @param apiKey - The GigaChat API key to use for testing
+ * @returns Promise<GigaChatTestResult> - Result of the API connectivity test
+ */
+export async function testGigaChatAPIConnection(apiKey: string): Promise<GigaChatTestResult> {
+  const result: GigaChatTestResult = {
+    success: false,
+    message: 'GigaChat API connection test failed',
+    details: {
+      authTest: {
+        success: false,
+        message: 'Authentication test failed'
+      },
+      modelsTest: {
+        success: false,
+        message: 'Models test failed'
+      },
+      completionTest: {
+        success: false,
+        message: 'Completion test failed'
+      }
+    }
+  };
+  
+  try {
+    // Step 1: Test authentication
+    let accessToken;
+    
+    try {
+      const authResponse = await axios.post<GigaChatTokenResponse>(
+        'https://gigachat-api.sbercloud.ru/api/v1/oauth/token',
+        { scope: 'GIGACHAT_API_PERS' },
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Bearer ${apiKey}`
+          }
+        }
+      );
+      
+      accessToken = authResponse.data.access_token;
+      
+      if (accessToken) {
+        result.details!.authTest = {
+          success: true,
+          message: 'Successfully authenticated with GigaChat API',
+          token: accessToken.substring(0, 10) + '...' // Only show a part of the token for security
+        };
+      } else {
+        throw new Error('No access token received');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      result.details!.authTest = {
+        success: false,
+        message: `Authentication failed: ${errorMessage}`
+      };
+      return result;
+    }
+    
+    // Step 2: Test retrieving models
+    try {
+      const modelsResponse = await axios.get(
+        'https://gigachat-api.sbercloud.ru/api/v1/models',
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        }
+      );
+      
+      if (modelsResponse.data && Array.isArray(modelsResponse.data.data)) {
+        const models = modelsResponse.data.data.map((model: any) => model.id);
+        result.details!.modelsTest = {
+          success: true,
+          message: `Successfully retrieved ${models.length} models`,
+          models
+        };
+      } else {
+        throw new Error('Invalid response when fetching models');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      result.details!.modelsTest = {
+        success: false,
+        message: `Models retrieval failed: ${errorMessage}`
+      };
+    }
+    
+    // Step 3: Test chat completion
+    try {
+      const completionResponse = await axios.post<GigaChatResponse>(
+        'https://gigachat-api.sbercloud.ru/api/v1/chat/completions',
+        {
+          model: 'GigaChat',
+          messages: [
+            { role: 'system', content: 'You are a helpful assistant.' },
+            { role: 'user', content: 'Say hello in Russian.' }
+          ],
+          temperature: 0.7,
+          max_tokens: 100,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          }
+        }
+      );
+      
+      if (completionResponse.data && 
+          completionResponse.data.choices && 
+          completionResponse.data.choices.length > 0) {
+        
+        const response = completionResponse.data.choices[0].message.content;
+        result.details!.completionTest = {
+          success: true,
+          message: 'Successfully generated completion',
+          response
+        };
+      } else {
+        throw new Error('Invalid response from chat completion API');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      result.details!.completionTest = {
+        success: false,
+        message: `Completion generation failed: ${errorMessage}`
+      };
+    }
+    
+    // Overall test result
+    result.success = 
+      result.details!.authTest!.success && 
+      result.details!.modelsTest!.success && 
+      result.details!.completionTest!.success;
+    
+    if (result.success) {
+      result.message = 'GigaChat API connection test passed successfully';
+    } else if (result.details!.authTest!.success) {
+      result.message = 'Partial success: Authentication succeeded but some API tests failed';
+    }
+    
+    return result;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return {
+      success: false,
+      message: `GigaChat API test failed with error: ${errorMessage}`
+    };
+  }
 }
 
 /**
