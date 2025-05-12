@@ -202,3 +202,92 @@ export type InsertUserSettings = z.infer<typeof insertUserSettingsSchema>;
 
 export type AnalyticsData = typeof analyticsData.$inferSelect;
 export type InsertAnalyticsData = z.infer<typeof insertAnalyticsDataSchema>;
+
+// Sandbox Tables
+export const sandboxEnvironments = pgTable("sandbox_environments", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const sandboxApiEndpoints = pgTable("sandbox_api_endpoints", {
+  id: serial("id").primaryKey(),
+  environmentId: integer("environment_id").references(() => sandboxEnvironments.id).notNull(),
+  apiType: apiTypeEnum("api_type").notNull(),
+  path: text("path").notNull(),
+  method: text("method").notNull().default("GET"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const sandboxTestScenarios = pgTable("sandbox_test_scenarios", {
+  id: serial("id").primaryKey(),
+  endpointId: integer("endpoint_id").references(() => sandboxApiEndpoints.id).notNull(),
+  name: text("name").notNull(),
+  type: testScenarioTypeEnum("type").notNull(),
+  description: text("description"),
+  requestConditions: jsonb("request_conditions"),
+  responseData: jsonb("response_data").notNull(),
+  statusCode: integer("status_code").default(200).notNull(),
+  delayMs: integer("delay_ms").default(0),
+  isDefault: boolean("is_default").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const sandboxLogs = pgTable("sandbox_logs", {
+  id: serial("id").primaryKey(),
+  environmentId: integer("environment_id").references(() => sandboxEnvironments.id).notNull(),
+  endpointId: integer("endpoint_id").references(() => sandboxApiEndpoints.id),
+  scenarioId: integer("scenario_id").references(() => sandboxTestScenarios.id),
+  requestMethod: text("request_method").notNull(),
+  requestPath: text("request_path").notNull(),
+  requestHeaders: jsonb("request_headers"),
+  requestBody: jsonb("request_body"),
+  responseStatus: integer("response_status").notNull(),
+  responseBody: jsonb("response_body"),
+  duration: integer("duration").default(0).notNull(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+// Sandbox Zod schemas
+export const insertSandboxEnvironmentSchema = createInsertSchema(sandboxEnvironments).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSandboxApiEndpointSchema = createInsertSchema(sandboxApiEndpoints).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSandboxTestScenarioSchema = createInsertSchema(sandboxTestScenarios).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSandboxLogSchema = createInsertSchema(sandboxLogs).omit({
+  id: true,
+});
+
+// Sandbox Types
+export type SandboxEnvironment = typeof sandboxEnvironments.$inferSelect;
+export type InsertSandboxEnvironment = z.infer<typeof insertSandboxEnvironmentSchema>;
+
+export type SandboxApiEndpoint = typeof sandboxApiEndpoints.$inferSelect;
+export type InsertSandboxApiEndpoint = z.infer<typeof insertSandboxApiEndpointSchema>;
+
+export type SandboxTestScenario = typeof sandboxTestScenarios.$inferSelect;
+export type InsertSandboxTestScenario = z.infer<typeof insertSandboxTestScenarioSchema>;
+
+export type SandboxLog = typeof sandboxLogs.$inferSelect;
+export type InsertSandboxLog = z.infer<typeof insertSandboxLogSchema>;
