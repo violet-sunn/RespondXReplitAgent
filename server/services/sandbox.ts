@@ -74,7 +74,7 @@ class SandboxService {
         null,
         scenario.statusCode,
         scenario.responseData,
-        scenario.delayMs
+        scenario.delayMs || 0
       );
       
       // Return the simulated response

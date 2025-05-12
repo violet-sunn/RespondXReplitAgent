@@ -10,6 +10,7 @@ import { insertUserSchema, insertAppSchema, insertAISettingsSchema, insertUserSe
 import { generateAIResponse } from "./services/gigachat";
 import { fetchAppStoreReviews } from "./services/appstore";
 import { fetchGooglePlayReviews } from "./services/playstore";
+import sandboxRouter from "./routes/sandbox";
 
 // Mock data for development purposes
 const mockDashboardStats = {
@@ -700,6 +701,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   );
+
+  // Mount sandbox routes
+  app.use('/api/sandbox', sandboxRouter);
 
   const httpServer = createServer(app);
 
