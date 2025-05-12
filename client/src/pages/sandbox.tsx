@@ -43,6 +43,32 @@ export default function SandboxPage() {
   const [newEnvironmentName, setNewEnvironmentName] = useState('');
   const [newEnvironmentDesc, setNewEnvironmentDesc] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [testResult, setTestResult] = useState<GigaChatTestResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Interface for GigaChat API test results
+  interface GigaChatTestResult {
+    success: boolean;
+    message: string;
+    details?: {
+      authTest?: {
+        success: boolean;
+        message: string;
+        token?: string;
+      };
+      modelsTest?: {
+        success: boolean;
+        message: string;
+        models?: string[];
+      };
+      completionTest?: {
+        success: boolean;
+        message: string;
+        response?: string;
+      };
+    };
+  }
   
   const handleCreateEnvironment = async () => {
     if (!newEnvironmentName.trim()) return;
@@ -417,92 +443,260 @@ export default function SandboxPage() {
                   </TabsContent>
                   
                   <TabsContent value="gigachat">
-                    <h3 className="text-lg font-semibold mb-4">GigaChat API Simulation</h3>
+                    <h3 className="text-lg font-semibold mb-4">GigaChat API Testing</h3>
                     <p className="text-gray-500 mb-4">
-                      Test GigaChat API endpoints with predefined responses.
+                      Test GigaChat API endpoints with predefined responses or verify real API connection.
                     </p>
                     
-                    <Card className="mb-4">
-                      <CardHeader>
-                        <CardTitle>Generate AI Response</CardTitle>
-                        <CardDescription>
-                          POST /api/gigachat/v1/chat/completions
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div>
-                            <Label>Sample Request</Label>
-                            <div className="mt-2 p-4 bg-gray-50 rounded-md font-mono text-sm overflow-x-auto">
-                              curl -X POST "http://localhost:5000/api/gigachat/v1/chat/completions" \<br/>
-                              &nbsp;&nbsp;-H "X-Sandbox-Environment: 1" \<br/>
-                              &nbsp;&nbsp;-H "Content-Type: application/json" \<br/>
-                              &nbsp;&nbsp;-d '{`{"model": "gpt-3.5-turbo", "messages": [{"role": "system", "content": "You are a helpful assistant"}, {"role": "user", "content": "Generate a response for a 3-star review"}]}`}'
+                    <Tabs defaultValue="sandbox">
+                      <TabsList className="mb-4 w-full">
+                        <TabsTrigger value="sandbox" className="flex-1">Sandbox Mode</TabsTrigger>
+                        <TabsTrigger value="real" className="flex-1">Real API Connection</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="sandbox">
+                        <Card className="mb-4">
+                          <CardHeader>
+                            <CardTitle>Generate AI Response (Sandbox)</CardTitle>
+                            <CardDescription>
+                              POST /api/gigachat/v1/chat/completions
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-4">
+                              <div>
+                                <Label>Sample Request</Label>
+                                <div className="mt-2 p-4 bg-gray-50 rounded-md font-mono text-sm overflow-x-auto">
+                                  curl -X POST "http://localhost:5000/api/gigachat/v1/chat/completions" \<br/>
+                                  &nbsp;&nbsp;-H "X-Sandbox-Environment: 1" \<br/>
+                                  &nbsp;&nbsp;-H "Content-Type: application/json" \<br/>
+                                  &nbsp;&nbsp;-d '{`{"model": "gpt-3.5-turbo", "messages": [{"role": "system", "content": "You are a helpful assistant"}, {"role": "user", "content": "Generate a response for a 3-star review"}]}`}'
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <Label>Example Response</Label>
+                                <div className="mt-2 p-4 bg-gray-50 rounded-md font-mono text-sm overflow-x-auto">
+                                  {JSON.stringify({
+                                    "id": "chatcmpl-123456789",
+                                    "object": "chat.completion",
+                                    "created": 1747044647,
+                                    "model": "giga-5",
+                                    "choices": [
+                                      {
+                                        "index": 0,
+                                        "message": {
+                                          "role": "assistant",
+                                          "content": "Thank you for your feedback! We appreciate your kind words about our app. We're constantly working to improve the user experience and add new features. If you have any specific suggestions or encounter any issues, please don't hesitate to reach out to our support team."
+                                        },
+                                        "finish_reason": "stop"
+                                      }
+                                    ]
+                                  }, null, 2)}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                          
-                          <div>
-                            <Label>Example Response</Label>
-                            <div className="mt-2 p-4 bg-gray-50 rounded-md font-mono text-sm overflow-x-auto">
-                              {JSON.stringify({
-                                "id": "chatcmpl-123456789",
-                                "object": "chat.completion",
-                                "created": 1747044647,
-                                "model": "giga-5",
-                                "choices": [
-                                  {
-                                    "index": 0,
-                                    "message": {
-                                      "role": "assistant",
-                                      "content": "Thank you for your feedback! We appreciate your kind words about our app. We're constantly working to improve the user experience and add new features. If you have any specific suggestions or encounter any issues, please don't hesitate to reach out to our support team."
-                                    },
-                                    "finish_reason": "stop"
-                                  }
-                                ]
-                              }, null, 2)}
+                          </CardContent>
+                          <CardFooter className="flex-col space-y-2">
+                            <Button 
+                              className="w-full"
+                              onClick={() => {
+                                const sampleData = {
+                                  model: "gpt-3.5-turbo", 
+                                  messages: [
+                                    {role: "system", content: "You are a helpful assistant"}, 
+                                    {role: "user", content: "Generate a response for a 3-star review"}
+                                  ]
+                                };
+                                
+                                fetch('/api/gigachat/v1/chat/completions', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Sandbox-Environment': '1'
+                                  },
+                                  body: JSON.stringify(sampleData)
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                  alert('Response received! Check console for details.');
+                                  console.log('GigaChat API response:', data);
+                                })
+                                .catch(error => {
+                                  console.error('Error testing GigaChat API:', error);
+                                  alert('Error: ' + error.message);
+                                });
+                              }}
+                            >
+                              <PlayCircle className="mr-2 h-4 w-4" />
+                              Test Sandbox Endpoint
+                            </Button>
+                            <p className="text-xs text-gray-500 text-center">
+                              This endpoint will be tested via fetch API and results will appear in the browser console
+                            </p>
+                          </CardFooter>
+                        </Card>
+                      </TabsContent>
+                    
+                      <TabsContent value="real">
+                        <Card className="mb-4">
+                          <CardHeader>
+                            <CardTitle>Test Real GigaChat API Connection</CardTitle>
+                            <CardDescription>
+                              Tests authentication, models retrieval, and response generation with real API
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-4">
+                              <Alert className="bg-amber-50 border-amber-200 text-amber-800">
+                                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                                <AlertTitle className="text-amber-800">Important</AlertTitle>
+                                <AlertDescription className="text-amber-700">
+                                  You'll need a valid GigaChat API key to test real API connection. The key is only used for this test and not stored on our servers.
+                                </AlertDescription>
+                              </Alert>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="apiKey">GigaChat API Key</Label>
+                                <Input
+                                  id="apiKey"
+                                  type="password"
+                                  placeholder="Enter your GigaChat API key"
+                                  className="font-mono"
+                                  value={apiKey}
+                                  onChange={(e) => setApiKey(e.target.value)}
+                                />
+                                <p className="text-xs text-gray-500">
+                                  The API key should be in the format provided by Sber. All tests will be performed securely.
+                                </p>
+                              </div>
+                              
+                              {testResult && (
+                                <div className={`p-4 rounded-md mt-4 ${testResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                                  <div className="flex items-start">
+                                    {testResult.success ? (
+                                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
+                                    ) : (
+                                      <X className="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
+                                    )}
+                                    <div>
+                                      <h4 className={`font-medium ${testResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                                        {testResult.success ? 'Connection Successful' : 'Connection Failed'}
+                                      </h4>
+                                      <p className={`text-sm ${testResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                                        {testResult.message}
+                                      </p>
+                                      
+                                      {testResult.details && (
+                                        <div className="mt-3 space-y-2">
+                                          {testResult.details.authTest && (
+                                            <div className="flex items-start">
+                                              {testResult.details.authTest.success ? (
+                                                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
+                                              ) : (
+                                                <X className="h-4 w-4 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
+                                              )}
+                                              <div>
+                                                <p className="text-sm font-medium">Authentication</p>
+                                                <p className="text-xs">{testResult.details.authTest.message}</p>
+                                              </div>
+                                            </div>
+                                          )}
+                                          
+                                          {testResult.details.modelsTest && (
+                                            <div className="flex items-start">
+                                              {testResult.details.modelsTest.success ? (
+                                                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
+                                              ) : (
+                                                <X className="h-4 w-4 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
+                                              )}
+                                              <div>
+                                                <p className="text-sm font-medium">Models Retrieval</p>
+                                                <p className="text-xs">{testResult.details.modelsTest.message}</p>
+                                                {testResult.details.modelsTest.models && (
+                                                  <p className="text-xs font-mono mt-1">
+                                                    Available models: {testResult.details.modelsTest.models.join(', ')}
+                                                  </p>
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
+                                          
+                                          {testResult.details.completionTest && (
+                                            <div className="flex items-start">
+                                              {testResult.details.completionTest.success ? (
+                                                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
+                                              ) : (
+                                                <X className="h-4 w-4 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
+                                              )}
+                                              <div>
+                                                <p className="text-sm font-medium">Completion Generation</p>
+                                                <p className="text-xs">{testResult.details.completionTest.message}</p>
+                                                {testResult.details.completionTest.response && (
+                                                  <div className="mt-1 p-2 bg-white rounded border text-xs">
+                                                    {testResult.details.completionTest.response}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="flex-col space-y-2">
-                        <Button 
-                          className="w-full"
-                          onClick={() => {
-                            const sampleData = {
-                              model: "gpt-3.5-turbo", 
-                              messages: [
-                                {role: "system", content: "You are a helpful assistant"}, 
-                                {role: "user", content: "Generate a response for a 3-star review"}
-                              ]
-                            };
-                            
-                            fetch('/api/gigachat/v1/chat/completions', {
-                              method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json',
-                                'X-Sandbox-Environment': '1'
-                              },
-                              body: JSON.stringify(sampleData)
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                              alert('Response received! Check console for details.');
-                              console.log('GigaChat API response:', data);
-                            })
-                            .catch(error => {
-                              console.error('Error testing GigaChat API:', error);
-                              alert('Error: ' + error.message);
-                            });
-                          }}
-                        >
-                          <PlayCircle className="mr-2 h-4 w-4" />
-                          Test Endpoint
-                        </Button>
-                        <p className="text-xs text-gray-500 text-center">
-                          This endpoint will be tested via fetch API and results will appear in the browser console
-                        </p>
-                      </CardFooter>
-                    </Card>
+                          </CardContent>
+                          <CardFooter className="flex-col space-y-2">
+                            <Button 
+                              className="w-full"
+                              disabled={!apiKey.trim() || isLoading}
+                              onClick={() => {
+                                setIsLoading(true);
+                                setTestResult(null);
+                                
+                                fetch('/api/sandbox/test-connection/gigachat', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify({ apiKey })
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                  setTestResult(data);
+                                  setIsLoading(false);
+                                })
+                                .catch(error => {
+                                  console.error('Error testing real GigaChat API:', error);
+                                  setTestResult({
+                                    success: false,
+                                    message: `Connection test failed: ${error.message}`
+                                  });
+                                  setIsLoading(false);
+                                });
+                              }}
+                            >
+                              {isLoading ? (
+                                <>
+                                  <Hourglass className="mr-2 h-4 w-4 animate-spin" />
+                                  Testing Connection...
+                                </>
+                              ) : (
+                                <>
+                                  <Waves className="mr-2 h-4 w-4" />
+                                  Test Real API Connection
+                                </>
+                              )}
+                            </Button>
+                            <p className="text-xs text-gray-500 text-center">
+                              This will test your actual GigaChat API connection with all key components
+                            </p>
+                          </CardFooter>
+                        </Card>
+                      </TabsContent>
+                    </Tabs>
                   </TabsContent>
                 </Tabs>
               )}

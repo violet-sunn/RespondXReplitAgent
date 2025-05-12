@@ -530,9 +530,6 @@ async function createDefaultTestScenarios(endpointId: number) {
 // Real API Connection Testing Routes
 // These routes allow testing connections to actual APIs, not just simulations
 
-// Import the GigaChat service
-import { testGigaChatAPIConnection } from '../services/gigachat';
-
 // Test route for real GigaChat API connection
 router.post('/test-connection/gigachat', async (req, res) => {
   try {
