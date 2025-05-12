@@ -200,16 +200,16 @@ class SandboxService {
         if (path.includes('/oauth/token') || path.includes('/auth/token')) {
           if (requestBody && requestBody.api_key) {
             responseData = {
-              access_token: `sandbox_gigachat_token_${Date.now()}`,
+              access_token: `sk-sandbox-${Date.now()}-openai`,
               token_type: "Bearer",
               expires_in: 3600,
-              scope: requestBody.scope || "GIGACHAT_API_PERS"
+              scope: "openai_api"
             };
           } else {
             statusCode = 400;
             responseData = {
               error: 'invalid_scope',
-              error_description: 'Requested scope is invalid. Please use GIGACHAT_API_PERS or GIGACHAT_API_CORP'
+              error_description: 'API key is required for authentication'
             };
           }
         } 
@@ -695,27 +695,25 @@ class SandboxService {
     }
     // Если это запрос на получение токена доступа через OAuth
     else if (endpointPath.includes('oauth/token') || endpointPath.includes('auth/token')) {
-      // Check if the request has the necessary fields according to GigaChat documentation
-      const hasValidScope = requestBody && 
-        (requestBody.scope === 'GIGACHAT_API_PERS' || 
-         requestBody.scope === 'GIGACHAT_API_CORP');
+      // Check if the request has an API key
+      const hasValidAuth = requestBody && requestBody.api_key;
       
       // Correct format for OAuth token response
       if (!response.access_token) {
-        if (!hasValidScope) {
-          // If the scope is invalid, return an error
+        if (!hasValidAuth) {
+          // If the API key is missing, return an error
           return {
-            error: 'invalid_scope',
-            error_description: 'Requested scope is invalid. Please use GIGACHAT_API_PERS or GIGACHAT_API_CORP',
+            error: 'invalid_request',
+            error_description: 'API key is required for authentication',
             status: 400
           };
         }
         
         // Normal successful response
-        response.access_token = `sandbox_gigachat_token_${Date.now()}`;
+        response.access_token = `sk-sandbox-${Date.now()}-openai`;
         response.token_type = "Bearer";
-        response.expires_in = 3600; // Срок действия токена в секундах (1 час)
-        response.scope = requestBody?.scope || "GIGACHAT_API_PERS";
+        response.expires_in = 3600; // Token expiration in seconds (1 hour)
+        response.scope = "openai_api";
       }
     }
     // Если это запрос на получение доступных моделей
