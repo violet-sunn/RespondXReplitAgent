@@ -142,7 +142,7 @@ export async function fetchAppStoreReviews(app: App, maxResults: number = 100): 
               const userAISettings = await storage.getAISettings(app.userId);
               
               // Import here to avoid circular dependencies
-              const { generateAIResponse } = await import('./gigachat');
+              const { generateAIResponse } = await import('./openai');
               
               // Generate AI response
               const responseText = await generateAIResponse(newReview, userAISettings);

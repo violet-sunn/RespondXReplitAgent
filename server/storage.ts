@@ -545,7 +545,7 @@ export class DatabaseStorage implements IStorage {
         {
           id: 4,
           environmentId: 1, 
-          apiType: 'gigachat',
+          apiType: 'openai',
           path: '/v1/chat/completions',
           method: 'POST',
           description: 'Generate an AI response for a review',
