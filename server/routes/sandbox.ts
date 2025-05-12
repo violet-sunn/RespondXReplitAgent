@@ -7,8 +7,11 @@ import { testGigaChatAPIConnection } from '../services/gigachat';
 import { 
   insertSandboxEnvironmentSchema, 
   insertSandboxApiEndpointSchema,
-  insertSandboxTestScenarioSchema
+  insertSandboxTestScenarioSchema,
+  type Review,
+  type AISettings
 } from '@shared/schema';
+import { generateAIResponse } from '../services/gigachat';
 
 const router = Router();
 
@@ -530,15 +533,16 @@ async function createDefaultTestScenarios(endpointId: number) {
 // Real API Connection Testing Routes
 // These routes allow testing connections to actual APIs, not just simulations
 
-// Test route for real GigaChat API connection
+// Test route for real GigaChat API connection using environment variable
 router.post('/test-connection/gigachat', async (req, res) => {
   try {
-    const { apiKey } = req.body;
+    // Use API key from environment variable
+    const apiKey = process.env.GIGACHAT_API_KEY;
     
     if (!apiKey) {
-      return res.status(400).json({ 
+      return res.status(500).json({ 
         success: false, 
-        message: 'API key is required for testing GigaChat API connection'
+        message: 'GigaChat API key not configured in server environment'
       });
     }
     
@@ -556,79 +560,86 @@ router.post('/test-connection/gigachat', async (req, res) => {
   }
 });
 
-// Generate response to a review using real GigaChat API
+// Generate review response using real GigaChat API from environment variable
 router.post('/generate-response/gigachat', async (req, res) => {
   try {
     const { 
-      apiKey, 
       reviewText, 
-      reviewRating,
-      appName = "Ваше приложение",
-      responseStyle = "professional",
-      language = "ru" 
+      reviewRating = 3, 
+      appName = 'App', 
+      responseStyle = 'professional',
+      language = 'ru'
     } = req.body;
     
+    // Use the API key from environment variables
+    const apiKey = process.env.GIGACHAT_API_KEY;
+    
     if (!apiKey) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'API key is required for using GigaChat API'
+      return res.status(500).json({
+        success: false,
+        message: 'GigaChat API key not configured in server environment'
       });
     }
     
     if (!reviewText) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Review text is required for generating a response'
+      return res.status(400).json({
+        success: false,
+        message: 'Review text is required'
       });
     }
     
-    // Import the generate function from gigachat service
-    const { generateAIResponse } = await import('../services/gigachat');
-    
-    // Create a review object from the input
+    // Create a review object with the provided data
     const review = {
       id: 0,
-      appId: 0,
-      platform: language === 'ru' ? "app_store" : "google_play",
-      externalId: "manual-review",
-      authorName: "Пользователь",
-      rating: reviewRating || 3,
+      platform: language === 'ru' ? 'app_store' : 'google_play',
+      appId: 1,
+      externalId: 'manual-test',
+      authorName: 'Test User',
+      authorId: null,
+      rating: reviewRating,
+      title: null,
       text: reviewText,
+      language: language,
+      version: null,
+      responseId: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    } as Review;
+    
+    // Create AI settings with the provided style
+    const aiSettings = {
+      id: 0,
+      userId: 0,
+      apiKey: null, // We'll use API key from environment
+      responseStyle: responseStyle as any,
+      maxTokens: 1000,
+      temperature: 0.7,
       language: language,
       createdAt: new Date(),
       updatedAt: new Date()
-    };
+    } as AISettings;
     
-    // Set AI settings based on input
-    const aiSettings = {
-      style: responseStyle,
-      tone: responseStyle === 'friendly' ? 'warm' : 'professional',
-      language: language,
-      appContext: `Это приложение с названием "${appName}".`,
-      maxLength: 500
-    };
+    const response = await generateAIResponse(review, aiSettings, apiKey);
     
-    // Generate the response using the real API
-    const responseText = await generateAIResponse(review, aiSettings, apiKey);
-    
-    res.json({
+    return res.json({
       success: true,
-      response: responseText,
+      response,
       review: {
         text: reviewText,
-        rating: reviewRating || 3,
-        language: language
-      },
-      settings: aiSettings
+        rating: reviewRating,
+        appName
+      }
     });
   } catch (error) {
-    console.error('Error generating response with GigaChat:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to generate response',
+    console.error('Error generating response with GigaChat API:', error);
+    return res.status(500).json({
+      success: false,
+      message: `Error generating response: ${error instanceof Error ? error.message : 'Unknown error'}`,
       error: error instanceof Error ? error.message : String(error)
     });
   }
 });
+
+
 
 export default router;
