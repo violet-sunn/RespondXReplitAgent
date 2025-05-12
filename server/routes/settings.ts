@@ -51,14 +51,23 @@ router.get('/', async (req: any, res) => {
         lastName: 'User',
         profileImageUrl: null,
       },
-      notifications: userSettings?.notifications || {
+      notifications: userSettings ? {
+        emailNotifications: userSettings.emailNotifications,
+        reviewAlerts: userSettings.reviewAlerts,
+        responseAlerts: userSettings.responseAlerts,
+        dailyDigest: userSettings.dailyDigest,
+        marketingEmails: userSettings.marketingEmails,
+      } : {
         emailNotifications: false,
         reviewAlerts: true,
         responseAlerts: true,
         dailyDigest: false,
         marketingEmails: false,
       },
-      language: userSettings?.language || {
+      language: userSettings ? {
+        defaultLanguage: userSettings.defaultLanguage,
+        autoDetectReviewLanguage: userSettings.autoDetectLanguage,
+      } : {
         defaultLanguage: 'en',
         autoDetectReviewLanguage: true,
       },
@@ -90,27 +99,27 @@ router.patch('/language', async (req: any, res) => {
       // Create settings if they don't exist
       userSettings = await storage.createUserSettings({
         userId,
-        language: data,
-        notifications: {
-          emailNotifications: false,
-          reviewAlerts: true,
-          responseAlerts: true,
-          dailyDigest: false,
-          marketingEmails: false,
-        },
+        defaultLanguage: data.defaultLanguage,
+        autoDetectLanguage: data.autoDetectReviewLanguage || true,
+        emailNotifications: false,
+        reviewAlerts: true,
+        responseAlerts: true,
+        dailyDigest: false,
+        marketingEmails: false
       });
     } else {
       // Update existing settings
       userSettings = await storage.updateUserSettings(userId, {
-        language: {
-          ...userSettings.language,
-          ...data,
-        },
+        defaultLanguage: data.defaultLanguage,
+        autoDetectLanguage: data.autoDetectReviewLanguage
       });
     }
     
     res.json({ 
-      language: userSettings.language,
+      language: {
+        defaultLanguage: userSettings.defaultLanguage,
+        autoDetectReviewLanguage: userSettings.autoDetectLanguage
+      },
       message: 'Language settings updated successfully'
     });
   } catch (error) {
@@ -135,24 +144,33 @@ router.patch('/notifications', async (req: any, res) => {
       // Create settings if they don't exist
       userSettings = await storage.createUserSettings({
         userId,
-        notifications: data,
-        language: {
-          defaultLanguage: 'en',
-          autoDetectReviewLanguage: true,
-        },
+        defaultLanguage: 'en',
+        autoDetectLanguage: true,
+        emailNotifications: data.emailNotifications ?? false,
+        reviewAlerts: data.reviewAlerts ?? true,
+        responseAlerts: data.responseAlerts ?? true,
+        dailyDigest: data.dailyDigest ?? false,
+        marketingEmails: data.marketingEmails ?? false
       });
     } else {
       // Update existing settings
       userSettings = await storage.updateUserSettings(userId, {
-        notifications: {
-          ...userSettings.notifications,
-          ...data,
-        },
+        emailNotifications: data.emailNotifications,
+        reviewAlerts: data.reviewAlerts,
+        responseAlerts: data.responseAlerts,
+        dailyDigest: data.dailyDigest,
+        marketingEmails: data.marketingEmails
       });
     }
     
     res.json({ 
-      notifications: userSettings.notifications,
+      notifications: {
+        emailNotifications: userSettings.emailNotifications,
+        reviewAlerts: userSettings.reviewAlerts,
+        responseAlerts: userSettings.responseAlerts,
+        dailyDigest: userSettings.dailyDigest,
+        marketingEmails: userSettings.marketingEmails
+      },
       message: 'Notification settings updated successfully'
     });
   } catch (error) {
