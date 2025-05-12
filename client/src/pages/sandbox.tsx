@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   AlertTriangle, 
   Plus, 
@@ -25,7 +27,9 @@ import {
   Waves,
   X,
   Database,
-  CheckCircle
+  CheckCircle,
+  Copy,
+  MessageCircle
 } from 'lucide-react';
 
 export default function SandboxPage() {
@@ -43,9 +47,21 @@ export default function SandboxPage() {
   const [newEnvironmentName, setNewEnvironmentName] = useState('');
   const [newEnvironmentDesc, setNewEnvironmentDesc] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  // Connection test states
   const [apiKey, setApiKey] = useState('');
   const [testResult, setTestResult] = useState<GigaChatTestResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Manual review response generation states
+  const [apiKeyManual, setApiKeyManual] = useState('');
+  const [reviewText, setReviewText] = useState('');
+  const [reviewRating, setReviewRating] = useState(3);
+  const [responseStyle, setResponseStyle] = useState('professional');
+  const [appName, setAppName] = useState('RespondX Test App');
+  const [language, setLanguage] = useState('ru');
+  const [generatedResponse, setGeneratedResponse] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   
   // Interface for GigaChat API test results
   interface GigaChatTestResult {
@@ -448,11 +464,201 @@ export default function SandboxPage() {
                       Test GigaChat API endpoints with predefined responses or verify real API connection.
                     </p>
                     
-                    <Tabs defaultValue="sandbox">
+                    <Tabs defaultValue="manual">
                       <TabsList className="mb-4 w-full">
+                        <TabsTrigger value="manual" className="flex-1">Manual Review Response</TabsTrigger>
                         <TabsTrigger value="sandbox" className="flex-1">Sandbox Mode</TabsTrigger>
-                        <TabsTrigger value="real" className="flex-1">Real API Connection</TabsTrigger>
+                        <TabsTrigger value="real" className="flex-1">Connection Test</TabsTrigger>
                       </TabsList>
+                      
+                      <TabsContent value="manual">
+                        <Card className="mb-4">
+                          <CardHeader>
+                            <CardTitle>Generate Real Response to Review</CardTitle>
+                            <CardDescription>
+                              Use GigaChat API to generate real responses to app reviews
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-4">
+                              <Alert className="bg-amber-50 border-amber-200 text-amber-800">
+                                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                                <AlertTitle className="text-amber-800">API Key Required</AlertTitle>
+                                <AlertDescription className="text-amber-700">
+                                  You'll need a valid GigaChat API key to generate responses. The key is only used for this request and not stored on our servers.
+                                </AlertDescription>
+                              </Alert>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="apiKeyManual">GigaChat API Key</Label>
+                                <Input
+                                  id="apiKeyManual"
+                                  type="password"
+                                  placeholder="Enter your GigaChat API key"
+                                  className="font-mono"
+                                  value={apiKeyManual}
+                                  onChange={(e) => setApiKeyManual(e.target.value)}
+                                />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="reviewText">Review Text</Label>
+                                <Textarea
+                                  id="reviewText"
+                                  placeholder="Enter the review text that needs a response"
+                                  className="min-h-[100px]"
+                                  value={reviewText}
+                                  onChange={(e) => setReviewText(e.target.value)}
+                                />
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="reviewRating">Rating</Label>
+                                  <Select 
+                                    value={String(reviewRating)} 
+                                    onValueChange={(value) => setReviewRating(Number(value))}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select rating" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="1">1 Star</SelectItem>
+                                      <SelectItem value="2">2 Stars</SelectItem>
+                                      <SelectItem value="3">3 Stars</SelectItem>
+                                      <SelectItem value="4">4 Stars</SelectItem>
+                                      <SelectItem value="5">5 Stars</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <Label htmlFor="responseStyle">Response Style</Label>
+                                  <Select 
+                                    value={responseStyle} 
+                                    onValueChange={setResponseStyle}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select style" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="professional">Professional</SelectItem>
+                                      <SelectItem value="friendly">Friendly</SelectItem>
+                                      <SelectItem value="concise">Concise</SelectItem>
+                                      <SelectItem value="detailed">Detailed</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="appName">App Name</Label>
+                                  <Input
+                                    id="appName"
+                                    placeholder="Enter app name"
+                                    value={appName}
+                                    onChange={(e) => setAppName(e.target.value)}
+                                  />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <Label htmlFor="language">Language</Label>
+                                  <Select 
+                                    value={language} 
+                                    onValueChange={setLanguage}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select language" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="ru">Russian</SelectItem>
+                                      <SelectItem value="en">English</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                              
+                              {generatedResponse && (
+                                <div className="mt-6 space-y-2">
+                                  <Label>Generated Response</Label>
+                                  <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+                                    <p className="whitespace-pre-wrap">{generatedResponse}</p>
+                                  </div>
+                                  <div className="flex justify-end">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(generatedResponse);
+                                        alert('Response copied to clipboard!');
+                                      }}
+                                    >
+                                      <Copy className="mr-2 h-4 w-4" />
+                                      Copy to Clipboard
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                          <CardFooter className="flex-col space-y-2">
+                            <Button 
+                              className="w-full"
+                              disabled={!apiKeyManual.trim() || !reviewText.trim() || isGenerating}
+                              onClick={() => {
+                                setIsGenerating(true);
+                                setGeneratedResponse('');
+                                
+                                fetch('/api/sandbox/generate-response/gigachat', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify({
+                                    apiKey: apiKeyManual,
+                                    reviewText,
+                                    reviewRating,
+                                    appName,
+                                    responseStyle,
+                                    language
+                                  })
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                  if (data.success) {
+                                    setGeneratedResponse(data.response);
+                                  } else {
+                                    alert(`Error: ${data.message}`);
+                                    console.error('Error generating response:', data.error);
+                                  }
+                                  setIsGenerating(false);
+                                })
+                                .catch(error => {
+                                  console.error('Error generating response:', error);
+                                  alert(`Error: ${error.message}`);
+                                  setIsGenerating(false);
+                                });
+                              }}
+                            >
+                              {isGenerating ? (
+                                <>
+                                  <Hourglass className="mr-2 h-4 w-4 animate-spin" />
+                                  Generating Response...
+                                </>
+                              ) : (
+                                <>
+                                  <MessageCircle className="mr-2 h-4 w-4" />
+                                  Generate Response
+                                </>
+                              )}
+                            </Button>
+                            <p className="text-xs text-gray-500 text-center">
+                              This will generate a real response using the GigaChat API based on the review and settings
+                            </p>
+                          </CardFooter>
+                        </Card>
+                      </TabsContent>
                       
                       <TabsContent value="sandbox">
                         <Card className="mb-4">
@@ -750,8 +956,8 @@ function InfoIcon(props: React.ComponentProps<typeof AlertTriangle>) {
   return <AlertTriangle {...props} />;
 }
 
-// Badge component
-function Badge({ 
+// Custom badge component (renamed to avoid conflicts with imported Badge)
+function CustomBadge({ 
   variant = "default", 
   children, 
   className, 
