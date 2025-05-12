@@ -746,12 +746,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Import the sandbox service
       const { sandboxService } = await import('./services/sandbox');
       
+      // Pass request body to the sandbox service
       const response = await sandboxService.getResponseForEndpoint(
         environmentId,
         'app_store_connect',
         path,
         req.method,
-        scenario as any
+        scenario as any,
+        req.body
       );
       
       // Apply simulated delay if specified
@@ -767,7 +769,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(response.statusCode).json(response.data);
     } catch (error) {
       console.error('Error in App Store Connect API emulation:', error);
-      res.status(500).json({ message: 'Sandbox error in App Store Connect API emulation' });
+      res.status(500).json({ 
+        message: 'Sandbox error in App Store Connect API emulation',
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
   
@@ -799,12 +804,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Import the sandbox service
       const { sandboxService } = await import('./services/sandbox');
       
+      // Pass request body to the sandbox service
       const response = await sandboxService.getResponseForEndpoint(
         environmentId,
         'google_play_developer',
         path,
         req.method,
-        scenario as any
+        scenario as any,
+        req.body
       );
       
       // Apply simulated delay if specified
@@ -820,7 +827,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(response.statusCode).json(response.data);
     } catch (error) {
       console.error('Error in Google Play Developer API emulation:', error);
-      res.status(500).json({ message: 'Sandbox error in Google Play Developer API emulation' });
+      res.status(500).json({ 
+        message: 'Sandbox error in Google Play Developer API emulation',
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
   
@@ -852,12 +862,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Import the sandbox service
       const { sandboxService } = await import('./services/sandbox');
       
+      // Pass request body to the sandbox service
       const response = await sandboxService.getResponseForEndpoint(
         environmentId,
         'gigachat',
         path,
         req.method,
-        scenario as any
+        scenario as any,
+        req.body
       );
       
       // Apply simulated delay if specified
@@ -873,7 +885,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(response.statusCode).json(response.data);
     } catch (error) {
       console.error('Error in GigaChat API emulation:', error);
-      res.status(500).json({ message: 'Sandbox error in GigaChat API emulation' });
+      res.status(500).json({ 
+        message: 'Sandbox error in GigaChat API emulation',
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 

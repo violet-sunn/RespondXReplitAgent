@@ -113,7 +113,8 @@ class SandboxService {
     apiType: SandboxApiType, 
     path: string,
     method: string = 'GET',
-    scenarioType?: 'success' | 'error' | 'timeout' | 'rate_limit'
+    scenarioType?: 'success' | 'error' | 'timeout' | 'rate_limit',
+    requestBody?: any
   ): Promise<{
     statusCode: number;
     data: any;
@@ -136,6 +137,9 @@ class SandboxService {
         };
       }
       
+      // Extract path parameters
+      const pathParams = this.extractPathParams(path, endpoint.path);
+      
       // Find appropriate test scenario
       let scenario = null;
       
@@ -156,6 +160,18 @@ class SandboxService {
         };
       }
       
+      // Generate dynamic response data based on the API type and path parameters
+      let responseData = scenario.responseData;
+      
+      // Customize response data based on API type and path parameters
+      if (apiType === 'app_store_connect') {
+        responseData = this.customizeAppStoreResponse(endpoint.path, pathParams, responseData);
+      } else if (apiType === 'google_play_developer') {
+        responseData = this.customizeGooglePlayResponse(endpoint.path, pathParams, responseData);
+      } else if (apiType === 'gigachat') {
+        responseData = this.customizeGigaChatResponse(endpoint.path, requestBody, responseData);
+      }
+      
       // Log the request
       await this.logRequest(
         environmentId,
@@ -164,16 +180,16 @@ class SandboxService {
         method,
         path,
         null,
-        null,
+        requestBody,
         scenario.statusCode,
-        scenario.responseData,
+        responseData,
         scenario.delayMs || 0
       );
       
       // Return the simulated response
       return {
         statusCode: scenario.statusCode,
-        data: scenario.responseData,
+        data: responseData,
         headers: { 'Content-Type': 'application/json' },
         delay: scenario.delayMs || 0
       };
@@ -210,28 +226,237 @@ class SandboxService {
     }
     
     try {
+      // Safely stringify the request and response data
+      let requestHeadersStr = undefined;
+      let requestBodyStr = undefined;
+      let responseBodyStr = undefined;
+      
+      try {
+        if (requestHeaders) {
+          requestHeadersStr = typeof requestHeaders === 'string' ? 
+            requestHeaders : JSON.stringify(requestHeaders);
+        }
+      } catch (e) {
+        console.warn('Failed to stringify request headers:', e);
+        requestHeadersStr = '{"error": "Cannot stringify request headers"}';
+      }
+      
+      try {
+        if (requestBody) {
+          requestBodyStr = typeof requestBody === 'string' ? 
+            requestBody : JSON.stringify(requestBody);
+        }
+      } catch (e) {
+        console.warn('Failed to stringify request body:', e);
+        requestBodyStr = '{"error": "Cannot stringify request body"}';
+      }
+      
+      try {
+        if (responseBody) {
+          responseBodyStr = typeof responseBody === 'string' ? 
+            responseBody : JSON.stringify(responseBody);
+        }
+      } catch (e) {
+        console.warn('Failed to stringify response body:', e);
+        responseBodyStr = '{"error": "Cannot stringify response body"}';
+      }
+      
+      // Create the log entry
       await storage.createSandboxLog({
         environmentId,
         endpointId,
         scenarioId,
         requestMethod: method,
         requestPath: path,
-        requestHeaders: requestHeaders ? requestHeaders : undefined,
-        requestBody: requestBody ? requestBody : undefined,
+        requestHeaders: requestHeadersStr,
+        requestBody: requestBodyStr,
         responseStatus,
-        responseBody: responseBody ? responseBody : undefined,
+        responseBody: responseBodyStr,
         duration,
         timestamp: new Date()
       });
     } catch (error) {
-      // Silence errors about missing tables but log other errors
+      // Improve error handling to capture different types of database errors
       const errorMessage = error instanceof Error ? error.message : String(error);
-      if (!errorMessage.includes('relation "sandbox_logs" does not exist')) {
+      
+      // Only log when it's not a known database missing table error
+      if (!errorMessage.includes('relation "sandbox_logs" does not exist') &&
+          !errorMessage.includes('foreign key constraint') &&
+          !errorMessage.includes('violates not-null constraint')) {
         console.error('Error logging sandbox request:', error);
+      } else {
+        // For known errors in sandbox mode, log a simpler message
+        console.warn('Skipping sandbox log due to database constraint or missing table');
       }
     }
   }
   
+  /**
+   * Customize App Store API response using path parameters
+   */
+  private customizeAppStoreResponse(endpointPath: string, pathParams: Record<string, string>, baseResponse: any): any {
+    // Deep clone the base response to avoid modifying the original
+    const response = JSON.parse(JSON.stringify(baseResponse));
+    
+    if (endpointPath.includes('reviews') && !endpointPath.includes('response')) {
+      // This is a get reviews endpoint
+      const appId = pathParams['app_id'] || '123456';
+
+      // Create a standard App Store reviews response if none exists
+      if (!response.data || !Array.isArray(response.data)) {
+        response.data = [];
+      }
+      
+      // Ensure there's at least one review
+      if (response.data.length === 0) {
+        response.data.push(this.getAppStoreReviewSample());
+      }
+      
+      // Set app ID in the response
+      if (response.links) {
+        response.links.self = `https://api.appstoreconnect.apple.com/v1/apps/${appId}/reviews`;
+      } else {
+        response.links = {
+          self: `https://api.appstoreconnect.apple.com/v1/apps/${appId}/reviews`
+        };
+      }
+    } 
+    else if (endpointPath.includes('response') && pathParams['review_id']) {
+      // This is a review response endpoint
+      const reviewId = pathParams['review_id'];
+      
+      // Create a response data for an App Store review response
+      if (!response.data) {
+        response.data = {
+          id: `response-${Date.now()}`,
+          type: 'customerReviewResponses',
+          attributes: {
+            responseBody: 'Thank you for your feedback. We appreciate your input and will consider it for future updates.',
+            state: 'PUBLISHED',
+            lastModifiedDate: new Date().toISOString()
+          },
+          relationships: {
+            review: {
+              data: {
+                id: reviewId,
+                type: 'customerReviews'
+              }
+            }
+          }
+        };
+      }
+    }
+    
+    return response;
+  }
+
+  /**
+   * Customize Google Play API response using path parameters
+   */
+  private customizeGooglePlayResponse(endpointPath: string, pathParams: Record<string, string>, baseResponse: any): any {
+    // Deep clone the base response to avoid modifying the original
+    const response = JSON.parse(JSON.stringify(baseResponse));
+    
+    if (endpointPath.includes('reviews') && !endpointPath.includes('reply')) {
+      // This is a get reviews endpoint
+      const packageName = pathParams['package_name'] || 'com.example.app';
+      
+      // Create a standard Google Play reviews response if none exists
+      if (!response.reviews || !Array.isArray(response.reviews)) {
+        response.reviews = [];
+      }
+      
+      // Ensure there's at least one review
+      if (response.reviews.length === 0) {
+        const sampleReview = this.getGooglePlayReviewSample();
+        response.reviews.push({
+          reviewId: sampleReview.reviewId,
+          authorName: sampleReview.authorName,
+          comments: [{
+            userComment: {
+              text: this.getReviewTextByRating(4),
+              lastModified: {
+                seconds: Math.floor(Date.now() / 1000)
+              },
+              starRating: 4
+            }
+          }]
+        });
+      }
+      
+      // Set nextPageToken if it doesn't exist
+      if (!response.nextPageToken) {
+        response.nextPageToken = `token-${Date.now()}`;
+      }
+    } 
+    else if (endpointPath.includes('reply') && pathParams['review_id']) {
+      // This is a review response endpoint
+      const reviewId = pathParams['review_id'];
+      
+      // Create a response for a Google Play review reply
+      if (!response.result) {
+        response.result = {
+          reviewId: reviewId,
+          reply: {
+            text: 'Thank you for your feedback. We appreciate your input and will consider it for future updates.',
+            lastEdited: {
+              seconds: Math.floor(Date.now() / 1000)
+            }
+          }
+        };
+      }
+    }
+    
+    return response;
+  }
+
+  /**
+   * Customize GigaChat API response using request body
+   */
+  private customizeGigaChatResponse(endpointPath: string, requestBody: any, baseResponse: any): any {
+    // Deep clone the base response to avoid modifying the original
+    const response = JSON.parse(JSON.stringify(baseResponse));
+    
+    // If it's a chat completion request
+    if (endpointPath.includes('chat/completions')) {
+      let prompt = '';
+      
+      // Extract the prompt from the request body if available
+      if (requestBody && requestBody.messages && Array.isArray(requestBody.messages)) {
+        // Find the last user message
+        for (let i = requestBody.messages.length - 1; i >= 0; i--) {
+          if (requestBody.messages[i].role === 'user') {
+            prompt = requestBody.messages[i].content || '';
+            break;
+          }
+        }
+      }
+      
+      // Create a standard chat completion response if none exists
+      if (!response.id || !response.choices) {
+        response.id = `chatcmpl-${Date.now()}`;
+        response.object = 'chat.completion';
+        response.created = Math.floor(Date.now() / 1000);
+        response.model = requestBody?.model || 'giga-5';
+        response.choices = [{
+          index: 0,
+          message: {
+            role: 'assistant',
+            content: this.generateAIResponse(prompt)
+          },
+          finish_reason: 'stop'
+        }];
+      }
+      // If choices exist but content is empty, generate a response
+      else if (response.choices && response.choices.length > 0 && 
+               response.choices[0].message && !response.choices[0].message.content) {
+        response.choices[0].message.content = this.generateAIResponse(prompt);
+      }
+    }
+    
+    return response;
+  }
+
   /**
    * Generate sample review data for App Store API
    */
