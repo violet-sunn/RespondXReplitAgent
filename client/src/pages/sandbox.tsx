@@ -57,19 +57,7 @@ export default function SandboxPage() {
     setIsDialogOpen(false);
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="container mx-auto py-8">
-        <Alert className="mb-6 bg-yellow-50 border-yellow-300">
-          <AlertTriangle className="h-4 w-4 text-yellow-800" />
-          <AlertTitle className="text-yellow-800">Authentication Required</AlertTitle>
-          <AlertDescription className="text-yellow-700">
-            You need to be logged in to access the sandbox environment.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
+  // Removed authentication check to allow guest access
 
   return (
     <div className="container mx-auto py-6">
@@ -308,45 +296,212 @@ export default function SandboxPage() {
                   <TabsContent value="app-store">
                     <h3 className="text-lg font-semibold mb-4">App Store Connect API Simulation</h3>
                     <p className="text-gray-500 mb-4">
-                      Configure test scenarios for App Store Connect API endpoints.
+                      Test App Store Connect API endpoints with predefined responses.
                     </p>
                     
                     <Card className="mb-4">
-                      <CardContent className="pt-6">
-                        <p className="text-center text-gray-500">
-                          Endpoint implementation coming soon.
-                        </p>
+                      <CardHeader>
+                        <CardTitle>Fetch App Reviews</CardTitle>
+                        <CardDescription>
+                          GET /api/app-store/v1/apps/{'{app_id}'}/reviews
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div>
+                            <Label>Sample Request</Label>
+                            <div className="mt-2 p-4 bg-gray-50 rounded-md font-mono text-sm overflow-x-auto">
+                              curl -X GET "http://localhost:5000/api/app-store/v1/apps/123456/reviews" \<br/>
+                              &nbsp;&nbsp;-H "X-Sandbox-Environment: 1" \<br/>
+                              &nbsp;&nbsp;-H "Accept: application/json"
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <Label>Example Response</Label>
+                            <div className="mt-2 p-4 bg-gray-50 rounded-md font-mono text-sm overflow-x-auto">
+                              {JSON.stringify({
+                                "data": [
+                                  {
+                                    "id": "12345",
+                                    "attributes": {
+                                      "title": "Great app!",
+                                      "review": "This app is really useful and well designed.",
+                                      "rating": 5,
+                                      "createdDate": "2025-05-12T10:10:05.472Z",
+                                      "userName": "HappyUser123",
+                                      "territory": "US"
+                                    }
+                                  }
+                                ],
+                                "links": {
+                                  "self": "https://api.appstoreconnect.apple.com/v1/apps/app_id/reviews"
+                                }
+                              }, null, 2)}
+                            </div>
+                          </div>
+                        </div>
                       </CardContent>
+                      <CardFooter>
+                        <Button 
+                          onClick={() => window.open('/api/app-store/v1/apps/123456/reviews?sandbox=1', '_blank')}
+                          className="w-full"
+                        >
+                          <PlayCircle className="mr-2 h-4 w-4" />
+                          Test Endpoint
+                        </Button>
+                      </CardFooter>
                     </Card>
                   </TabsContent>
                   
                   <TabsContent value="google-play">
                     <h3 className="text-lg font-semibold mb-4">Google Play Developer API Simulation</h3>
                     <p className="text-gray-500 mb-4">
-                      Configure test scenarios for Google Play Developer API endpoints.
+                      Test Google Play Developer API endpoints with predefined responses.
                     </p>
                     
                     <Card className="mb-4">
-                      <CardContent className="pt-6">
-                        <p className="text-center text-gray-500">
-                          Endpoint implementation coming soon.
-                        </p>
+                      <CardHeader>
+                        <CardTitle>Fetch App Reviews</CardTitle>
+                        <CardDescription>
+                          GET /api/google-play/v3/applications/{'{package_name}'}/reviews
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div>
+                            <Label>Sample Request</Label>
+                            <div className="mt-2 p-4 bg-gray-50 rounded-md font-mono text-sm overflow-x-auto">
+                              curl -X GET "http://localhost:5000/api/google-play/v3/applications/com.example.app/reviews" \<br/>
+                              &nbsp;&nbsp;-H "X-Sandbox-Environment: 1" \<br/>
+                              &nbsp;&nbsp;-H "Accept: application/json"
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <Label>Example Response</Label>
+                            <div className="mt-2 p-4 bg-gray-50 rounded-md font-mono text-sm overflow-x-auto">
+                              {JSON.stringify({
+                                "reviews": [
+                                  {
+                                    "reviewId": "gp12345",
+                                    "authorName": "Google User",
+                                    "comments": [
+                                      {
+                                        "userComment": {
+                                          "text": "Love this app, very intuitive!",
+                                          "lastModified": {
+                                            "seconds": 1747044636
+                                          },
+                                          "starRating": 5
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }, null, 2)}
+                            </div>
+                          </div>
+                        </div>
                       </CardContent>
+                      <CardFooter>
+                        <Button 
+                          onClick={() => window.open('/api/google-play/v3/applications/com.example.app/reviews?sandbox=1', '_blank')}
+                          className="w-full"
+                        >
+                          <PlayCircle className="mr-2 h-4 w-4" />
+                          Test Endpoint
+                        </Button>
+                      </CardFooter>
                     </Card>
                   </TabsContent>
                   
                   <TabsContent value="gigachat">
                     <h3 className="text-lg font-semibold mb-4">GigaChat API Simulation</h3>
                     <p className="text-gray-500 mb-4">
-                      Configure test scenarios for GigaChat API endpoints.
+                      Test GigaChat API endpoints with predefined responses.
                     </p>
                     
                     <Card className="mb-4">
-                      <CardContent className="pt-6">
-                        <p className="text-center text-gray-500">
-                          Endpoint implementation coming soon.
-                        </p>
+                      <CardHeader>
+                        <CardTitle>Generate AI Response</CardTitle>
+                        <CardDescription>
+                          POST /api/gigachat/v1/chat/completions
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div>
+                            <Label>Sample Request</Label>
+                            <div className="mt-2 p-4 bg-gray-50 rounded-md font-mono text-sm overflow-x-auto">
+                              curl -X POST "http://localhost:5000/api/gigachat/v1/chat/completions" \<br/>
+                              &nbsp;&nbsp;-H "X-Sandbox-Environment: 1" \<br/>
+                              &nbsp;&nbsp;-H "Content-Type: application/json" \<br/>
+                              &nbsp;&nbsp;-d '{`{"model": "gpt-3.5-turbo", "messages": [{"role": "system", "content": "You are a helpful assistant"}, {"role": "user", "content": "Generate a response for a 3-star review"}]}`}'
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <Label>Example Response</Label>
+                            <div className="mt-2 p-4 bg-gray-50 rounded-md font-mono text-sm overflow-x-auto">
+                              {JSON.stringify({
+                                "id": "chatcmpl-123456789",
+                                "object": "chat.completion",
+                                "created": 1747044647,
+                                "model": "giga-5",
+                                "choices": [
+                                  {
+                                    "index": 0,
+                                    "message": {
+                                      "role": "assistant",
+                                      "content": "Thank you for your feedback! We appreciate your kind words about our app. We're constantly working to improve the user experience and add new features. If you have any specific suggestions or encounter any issues, please don't hesitate to reach out to our support team."
+                                    },
+                                    "finish_reason": "stop"
+                                  }
+                                ]
+                              }, null, 2)}
+                            </div>
+                          </div>
+                        </div>
                       </CardContent>
+                      <CardFooter className="flex-col space-y-2">
+                        <Button 
+                          className="w-full"
+                          onClick={() => {
+                            const sampleData = {
+                              model: "gpt-3.5-turbo", 
+                              messages: [
+                                {role: "system", content: "You are a helpful assistant"}, 
+                                {role: "user", content: "Generate a response for a 3-star review"}
+                              ]
+                            };
+                            
+                            fetch('/api/gigachat/v1/chat/completions', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                                'X-Sandbox-Environment': '1'
+                              },
+                              body: JSON.stringify(sampleData)
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                              alert('Response received! Check console for details.');
+                              console.log('GigaChat API response:', data);
+                            })
+                            .catch(error => {
+                              console.error('Error testing GigaChat API:', error);
+                              alert('Error: ' + error.message);
+                            });
+                          }}
+                        >
+                          <PlayCircle className="mr-2 h-4 w-4" />
+                          Test Endpoint
+                        </Button>
+                        <p className="text-xs text-gray-500 text-center">
+                          This endpoint will be tested via fetch API and results will appear in the browser console
+                        </p>
+                      </CardFooter>
                     </Card>
                   </TabsContent>
                 </Tabs>

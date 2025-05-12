@@ -32,8 +32,9 @@ interface SandboxProviderProps {
 }
 
 export const SandboxProvider = ({ children }: SandboxProviderProps) => {
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [currentEnvironmentId, setCurrentEnvironmentId] = useState<number | null>(null);
+  // Always enabled for guest mode
+  const [isEnabled, setIsEnabled] = useState(true);
+  const [currentEnvironmentId, setCurrentEnvironmentId] = useState<number | null>(1); // Default to demo environment
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
