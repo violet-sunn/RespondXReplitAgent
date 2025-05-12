@@ -402,7 +402,7 @@ const Settings: React.FC = () => {
                             name="apiKey"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>GigaChat API Key</FormLabel>
+                                <FormLabel>OpenAI API Key</FormLabel>
                                 <FormControl>
                                   <Input 
                                     type="password" 

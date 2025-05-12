@@ -106,7 +106,7 @@ const AIOverview: React.FC = () => {
             <div className="mt-4 flex items-center">
               <div className="flex items-center">
                 <Bot className="text-primary-600 dark:text-primary-400 mr-2 h-5 w-5" />
-                <span className="text-sm font-medium text-gray-900 dark:text-white">GigaChat AI</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-white">OpenAI ChatGPT</span>
               </div>
               <div className="ml-3 text-sm text-gray-500 dark:text-gray-400">
                 v{aiStatus.version}
