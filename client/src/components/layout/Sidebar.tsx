@@ -1,12 +1,15 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, MessageCircle, AppWindow, LineChart, Settings, LogOut, WifiIcon, LogIn } from "lucide-react";
+import { LayoutDashboard, MessageCircle, AppWindow, LineChart, Settings, LogOut, WifiIcon, LogIn, Globe } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
+import LanguageSelector from "@/components/ui/LanguageSelector";
 
 const Sidebar: React.FC = () => {
   const [location] = useLocation();
   const { user, isAuthenticated, login, logout } = useAuth();
+  const { t } = useLanguage();
 
   const navItems = [
     { 

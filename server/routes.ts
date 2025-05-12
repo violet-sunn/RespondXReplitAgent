@@ -762,8 +762,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  // Mount sandbox routes
+  // Mount modular routes
   app.use('/api/sandbox', sandboxRouter);
+  app.use('/api/settings', settingsRouter);
   
   // Direct API Emulation endpoints
   app.all('/api/app-store/*', async (req, res) => {
