@@ -178,9 +178,10 @@ export async function generateAIResponse(
     const responseStyle = aiSettings?.responseStyle || 'professional';
     const maxLength = aiSettings?.maxResponseLength || 250;
     
-    // Prepare system prompt based on response style
+    // Prepare system prompt based on response style and language
     let systemPrompt = "You are a helpful customer support agent responding to app reviews. ";
     
+    // Add tone instructions based on style
     switch (responseStyle) {
       case 'friendly':
         systemPrompt += "Use a friendly, casual, and warm tone. Be personable and empathetic.";
@@ -196,6 +197,11 @@ export async function generateAIResponse(
         break;
       default:
         systemPrompt += "Use a professional, polite, and respectful tone. Be clear and concise.";
+    }
+    
+    // Add language instruction based on review language
+    if (review.language) {
+      systemPrompt += ` IMPORTANT: Your response MUST be in the same language as the user's review (${review.language}). If the review is in Russian, respond in Russian. If the review is in English, respond in English.`;
     }
     
     // Build the user prompt with review information
@@ -214,6 +220,7 @@ export async function generateAIResponse(
       - Don't include any placeholders like [APP NAME] - write as if you know the app
       - Avoid making promises about specific future updates unless mentioned in the prompt
       - Be specific in your response to make it feel personalized
+      - RESPOND IN THE SAME LANGUAGE AS THE REVIEW. Review language is: ${review.language || 'English'}
     `;
 
     // Prepare the request to the OpenAI API
