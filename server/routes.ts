@@ -582,15 +582,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       
       // Fetch AI settings
-      const aiSettings = await storage.getAISettings(userId);
+      const aiSettings = await storage.getAISettings(parseInt(userId));
       
       // Fetch notification settings
-      const notificationSettings = await storage.getUserSettings(userId);
+      const notificationSettings = await storage.getUserSettings(parseInt(userId));
       
       // Combine all settings
       const settings = {
         profile: user ? {
-          name: user.name,
+          name: user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Guest User',
           email: user.email
         } : null,
         aiSettings: aiSettings ? {
@@ -599,7 +599,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           maxResponseLength: aiSettings.maxResponseLength,
           includeSignature: aiSettings.includeSignature,
           signature: aiSettings.signature
-        } : null,
+        } : {
+          responseStyle: "professional",
+          maxResponseLength: 250,
+          includeSignature: false,
+          signature: ""
+        },
         notifications: notificationSettings ? {
           emailNotifications: notificationSettings.emailNotifications,
           reviewAlerts: notificationSettings.reviewAlerts,

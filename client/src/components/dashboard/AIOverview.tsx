@@ -2,6 +2,8 @@ import React from "react";
 import { Bot } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
+import { useLocation } from "wouter";
+import { cn } from "@/lib/utils";
 
 interface AIMetrics {
   generatedResponses: {
@@ -20,6 +22,8 @@ const AIOverview: React.FC = () => {
   const { data: metrics, isLoading } = useQuery<AIMetrics>({
     queryKey: ["/api/ai/metrics"],
   });
+  
+  const [_, navigate] = useLocation();
 
   if (isLoading || !metrics) {
     return (
@@ -67,7 +71,12 @@ const AIOverview: React.FC = () => {
                 </div>
               </div>
               <div className="mt-2">
-                <Progress value={generatedResponsesPercentage} className="h-2 bg-primary-100 dark:bg-primary-900" indicatorColor="bg-primary-500" />
+                <Progress value={generatedResponsesPercentage} className={cn("h-2", "bg-primary-100 dark:bg-primary-900")} />
+                <style dangerouslySetInnerHTML={{ __html: `
+                  .progress-indicator-primary {
+                    background-color: var(--primary-500);
+                  }
+                `}} />
               </div>
             </div>
             
@@ -77,7 +86,12 @@ const AIOverview: React.FC = () => {
                 <div className="text-sm font-medium text-gray-900 dark:text-white">{responseAccuracy}%</div>
               </div>
               <div className="mt-2">
-                <Progress value={responseAccuracy} className="h-2 bg-secondary-100 dark:bg-secondary-900" indicatorColor="bg-secondary-500" />
+                <Progress value={responseAccuracy} className={cn("h-2", "bg-secondary-100 dark:bg-secondary-900")} />
+                <style dangerouslySetInnerHTML={{ __html: `
+                  .progress-indicator-secondary {
+                    background-color: var(--secondary-500);
+                  }
+                `}} />
               </div>
             </div>
             
@@ -87,7 +101,12 @@ const AIOverview: React.FC = () => {
                 <div className="text-sm font-medium text-gray-900 dark:text-white">{userSatisfaction}%</div>
               </div>
               <div className="mt-2">
-                <Progress value={userSatisfaction} className="h-2 bg-amber-100 dark:bg-amber-900" indicatorColor="bg-amber-500" />
+                <Progress value={userSatisfaction} className={cn("h-2", "bg-amber-100 dark:bg-amber-900")} />
+                <style dangerouslySetInnerHTML={{ __html: `
+                  .progress-indicator-amber {
+                    background-color: var(--amber-500);
+                  }
+                `}} />
               </div>
             </div>
           </div>
@@ -113,7 +132,11 @@ const AIOverview: React.FC = () => {
               </div>
             </div>
             
-            <button type="button" className="mt-4 w-full flex justify-center items-center px-4 py-2 border border-primary-300 shadow-sm text-sm font-medium rounded-md text-primary-700 dark:text-primary-400 bg-white dark:bg-gray-800 hover:bg-primary-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+            <button 
+              type="button" 
+              className="mt-4 w-full flex justify-center items-center px-4 py-2 border border-primary-300 shadow-sm text-sm font-medium rounded-md text-primary-700 dark:text-primary-400 bg-white dark:bg-gray-800 hover:bg-primary-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              onClick={() => navigate('/settings?tab=ai-settings')}
+            >
               <i className="ri-settings-4-line mr-2"></i>
               Adjust AI Settings
             </button>
