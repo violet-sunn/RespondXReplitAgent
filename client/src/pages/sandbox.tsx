@@ -479,25 +479,13 @@ export default function SandboxPage() {
                           </CardHeader>
                           <CardContent>
                             <div className="space-y-4">
-                              <Alert className="bg-amber-50 border-amber-200 text-amber-800">
-                                <AlertTriangle className="h-4 w-4 text-amber-600" />
-                                <AlertTitle className="text-amber-800">API Key Required</AlertTitle>
-                                <AlertDescription className="text-amber-700">
-                                  You'll need a valid GigaChat API key to generate responses. The key is only used for this request and not stored on our servers.
+                              <Alert className="bg-green-50 border-green-200 text-green-800">
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                                <AlertTitle className="text-green-800">API Key Configured</AlertTitle>
+                                <AlertDescription className="text-green-700">
+                                  Your GigaChat API key is securely configured on the server. No need to enter it manually.
                                 </AlertDescription>
                               </Alert>
-                              
-                              <div className="space-y-2">
-                                <Label htmlFor="apiKeyManual">GigaChat API Key</Label>
-                                <Input
-                                  id="apiKeyManual"
-                                  type="password"
-                                  placeholder="Enter your GigaChat API key"
-                                  className="font-mono"
-                                  value={apiKeyManual}
-                                  onChange={(e) => setApiKeyManual(e.target.value)}
-                                />
-                              </div>
                               
                               <div className="space-y-2">
                                 <Label htmlFor="reviewText">Review Text</Label>
@@ -603,7 +591,7 @@ export default function SandboxPage() {
                           <CardFooter className="flex-col space-y-2">
                             <Button 
                               className="w-full"
-                              disabled={!apiKeyManual.trim() || !reviewText.trim() || isGenerating}
+                              disabled={!reviewText.trim() || isGenerating}
                               onClick={() => {
                                 setIsGenerating(true);
                                 setGeneratedResponse('');
@@ -614,7 +602,6 @@ export default function SandboxPage() {
                                     'Content-Type': 'application/json',
                                   },
                                   body: JSON.stringify({
-                                    apiKey: apiKeyManual,
                                     reviewText,
                                     reviewRating,
                                     appName,
@@ -752,28 +739,17 @@ export default function SandboxPage() {
                           </CardHeader>
                           <CardContent>
                             <div className="space-y-4">
-                              <Alert className="bg-amber-50 border-amber-200 text-amber-800">
-                                <AlertTriangle className="h-4 w-4 text-amber-600" />
-                                <AlertTitle className="text-amber-800">Important</AlertTitle>
-                                <AlertDescription className="text-amber-700">
-                                  You'll need a valid GigaChat API key to test real API connection. The key is only used for this test and not stored on our servers.
+                              <Alert className="bg-green-50 border-green-200 text-green-800">
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                                <AlertTitle className="text-green-800">API Key Configured</AlertTitle>
+                                <AlertDescription className="text-green-700">
+                                  Your GigaChat API key is securely configured on the server. No need to enter it manually.
                                 </AlertDescription>
                               </Alert>
                               
-                              <div className="space-y-2">
-                                <Label htmlFor="apiKey">GigaChat API Key</Label>
-                                <Input
-                                  id="apiKey"
-                                  type="password"
-                                  placeholder="Enter your GigaChat API key"
-                                  className="font-mono"
-                                  value={apiKey}
-                                  onChange={(e) => setApiKey(e.target.value)}
-                                />
-                                <p className="text-xs text-gray-500">
-                                  The API key should be in the format provided by Sber. All tests will be performed securely.
-                                </p>
-                              </div>
+                              <p className="text-sm text-gray-600">
+                                Click the Test button below to verify your GigaChat API connection and see available models.
+                              </p>
                               
                               {testResult && (
                                 <div className={`p-4 rounded-md mt-4 ${testResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
@@ -855,7 +831,7 @@ export default function SandboxPage() {
                           <CardFooter className="flex-col space-y-2">
                             <Button 
                               className="w-full"
-                              disabled={!apiKey.trim() || isLoading}
+                              disabled={isLoading}
                               onClick={() => {
                                 setIsLoading(true);
                                 setTestResult(null);
@@ -865,7 +841,7 @@ export default function SandboxPage() {
                                   headers: {
                                     'Content-Type': 'application/json',
                                   },
-                                  body: JSON.stringify({ apiKey })
+                                  body: JSON.stringify({})
                                 })
                                 .then(response => response.json())
                                 .then(data => {
